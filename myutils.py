@@ -16,25 +16,6 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
             excerpt = slice(start_idx, start_idx + batchsize)
         yield inputs[excerpt], targets[excerpt]
 
-# def sample(f, x, n):
-#     # f: theano function for activating the second last layer values
-#     # x: numpy 1D array associated with a character
-#     # n : number of sampled characters
-#     [_, _, vocab_size]= x.shape
-#     ixes = []
-
-#     for t in range(n):
-#         y = f(x)
-#         exp_y = np.exp(y)
-#         p = exp_y/np.sum(exp_y)
-
-#         ix = np.random.choice(range(vocab_size), p=p.ravel())
-#         x = np.zeros((vocab_size, 1))
-#         x[ix] = 1
-#         x = x.reshape((1,1,vocab_size)).astype('float32')
-#         ixes.append(ix)
-
-#     return ixes
 
 def create_train_val(X, Y, p=0.7):
     [n, t, d] = X.shape
@@ -57,7 +38,7 @@ def create_train_val(X, Y, p=0.7):
 
 def sample(z, temperature=1.0):
     # helper function to sample an index from a probability array
-    a = np.log(z) / temperature
-    a = np.exp(z) / np.sum(np.exp(a))
-    return np.argmax(np.random.multinomial(1, a, 1))
+    z = np.log(z) / temperature
+    z = np.exp(z) / np.sum(np.exp(z))
+    return np.argmax(np.random.multinomial(1, z, 1))
 
