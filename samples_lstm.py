@@ -65,33 +65,36 @@ model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
 iteration = 1
 
+outstr = ''
+
+fo = open('sample_out.txt','w')
+fo.close()
+
 while(True):
     print()
     
     print('*' * 50)
-    outstr = '*' * 50
+    outstr += '*******\n'
     
     print('Iteration', iteration)
-    outstr += 'Iteration', iteration
+    outstr += 'Iteration : %d\n' % (iteration)
 
     
     print('*' * 50)
-    outstr += '*' * 50, '\n'
+    outstr += '*******\n'
 
     model.fit(X,Y, batch_size=128, nb_epoch=1)
-
-
 
     print(' -- Text sampling ---')
     start_idx = np.random.randint(0, len(text) - maxlen -1)
     for temperature in [0.2, 0.5, 1.0, 1.2]:
         print(' -- Temperature : ', temperature)
-        outstr += ' -- Temperature : ', temperature
+        outstr += ' -- Temperature : %f\n' % (temperature)
 
 
         sen_seed = text[start_idx: start_idx + maxlen]
         print(' >> seed : ',sen_seed)
-        outstr += ' >> seed : ',sen_seed
+        outstr += ' >> seed : %s \n' % (sen_seed)
 
         txt = ''
         for it in range(ns):
@@ -106,7 +109,7 @@ while(True):
 
 
         print '----\n %s \n----' % (txt, )
-        outstr += '----\n %s \n----' % (txt, )
+        outstr += '----\n %s \n----\n' % (txt, )
 
 
 
