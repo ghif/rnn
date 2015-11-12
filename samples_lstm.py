@@ -13,7 +13,7 @@ from myutils import *
 
 # Data I/O
 datapath = 'data/samples.txt'
-text = open(datapath, 'r').read()
+text = open(datapath, 'r').read().lower()
 chars = set(text)
 data_size, vocab_size = len(text), len(chars)
 print 'Corpus has %d characters, %d unique.' % (data_size, vocab_size)
@@ -53,9 +53,9 @@ for i, sentence in enumerate(sentences):
 print('Build model...')
 model = Sequential()
 model.add(LSTM(512, return_sequences=True, input_shape=(maxlen, vocab_size)))
-model.add(Dropout(0.5))
+model.add(Dropout(0.2))
 model.add(LSTM(512, return_sequences=False))
-model.add(Dropout(0.5))
+model.add(Dropout(0.2))
 model.add(Dense(vocab_size))
 model.add(Activation('softmax'))
 
@@ -67,9 +67,16 @@ iteration = 1
 
 while(True):
     print()
+    
     print('*' * 50)
+    outstr = '*' * 50
+    
     print('Iteration', iteration)
+    outstr += 'Iteration', iteration
+
+    
     print('*' * 50)
+    outstr += '*' * 50, '\n'
 
     model.fit(X,Y, batch_size=128, nb_epoch=1)
 
@@ -79,12 +86,13 @@ while(True):
     start_idx = np.random.randint(0, len(text) - maxlen -1)
     for temperature in [0.2, 0.5, 1.0, 1.2]:
         print(' -- Temperature : ', temperature)
-
-        
+        outstr += ' -- Temperature : ', temperature
 
 
         sen_seed = text[start_idx: start_idx + maxlen]
         print(' >> seed : ',sen_seed)
+        outstr += ' >> seed : ',sen_seed
+
         txt = ''
         for it in range(ns):
             x = np.zeros((1, maxlen, len(chars)))
@@ -98,6 +106,14 @@ while(True):
 
 
         print '----\n %s \n----' % (txt, )
+        outstr += '----\n %s \n----' % (txt, )
+
+
+
+
+    fo = open('sample_out.txt','a')
+    fo.write(outstr)    
+    fo.close()
 
 
     iteration += 1
