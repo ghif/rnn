@@ -20,7 +20,8 @@ chars = set(text)
 data_size, vocab_size = len(text), len(chars)
 print 'Corpus has %d characters, %d unique.' % (data_size, vocab_size)
 
-outfile = 'sample_out.txt'
+outfile = 'sample2_out.txt'
+print(outfile)
 
 # Char <-> Indices Mappings
 char_indices = dict((c, i) for i, c in enumerate(chars))
@@ -65,19 +66,47 @@ model.add(Activation('softmax'))
 
 model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-
-
-# iteration = 1
-
 outstr = ''
-
 fo = open(outfile,'w')
 fo.close()
 
-# while(True):
-for iteration in range(1, 200):
+def text_sampling(templist, ns=400):
+    start_idx = np.random.randint(0, len(text) - maxlen - 1)
+
+    outstr = ''
+    for temperature in templist:
+        print(' -- Temperature : ', temperature)
+        outstr += ' -- Temperature : %f\n' % (temperature)
+        
+        sentence = text[start_idx: start_idx + maxlen]
+        print('----- Generating with seed: "' + sentence + '"')
+        outstr += ' -- Generating with seed : %s\n' % sentence
+
+        generated = ''
+        for iteration in range(ns):
+            x = np.zeros((1, maxlen, len(chars)))
+            for t, char in enumerate(sentence):
+                x[0, t, char_indices[char]] = 1.
+
+            y = model.predict(x, verbose=0)[0]
+            next_index = sample(y, temperature)
+            next_char = indices_char[next_index]
+
+            outstr += next_char
+            generated += next_char
+            sentence = sentence[1:] + next_char
+
+            
+        print()
+        print(generated)
+        outstr += '\n\n'
+
+    return outstr
+
+
+for iteration in range(1, 1000):
     print()
-    
+    outstr = ''
     print('*' * 50)
     outstr += '*******\n'
     
@@ -88,70 +117,15 @@ for iteration in range(1, 200):
     print('*' * 50)
     outstr += '*******\n'
 
-    model.fit(X,Y, batch_size=128, nb_epoch=1)
 
     print(' -- Text sampling ---')
-    start_idx = np.random.randint(0, len(text) - maxlen -1)
-    for temperature in [0.2, 0.5, 1.0, 1.2]:
-        print(' -- Temperature : ', temperature)
-        outstr += ' -- Temperature : %f\n' % (temperature)
+    generated = text_sampling([0.2, 0.5, 1., 1.2], ns=ns)
+    print(generated)
+    outstr += generated
 
+    fo = open(outfile,'a')
+    fo.write(outstr)    
+    fo.close()
 
-        # sen_seed = text[start_idx: start_idx + maxlen]
-        # print(' >> seed : ',sen_seed)
-        # outstr += ' >> seed : %s \n' % (sen_seed)
-
-        # txt = ''
-        # for it in range(ns):
-        #     x = np.zeros((1, maxlen, len(chars)))
-        #     for t, char in enumerate(sen_seed):
-        #         x[0, t, char_indices[char]] = 1
-
-        #     y = model.predict(x, verbose=0)[0]
-        #     next_index = sample(y, temperature)
-        #     next_char = indices_char[next_index]
-        #     txt += next_char
-
-
-        # print '----\n %s \n----' % (txt, )
-        # outstr += '----\n %s \n----\n' % (txt, )
-        generated = ''
-        sentence = text[start_idx: start_idx + maxlen]
-        generated += sentence
-        print('----- Generating with seed: "' + sentence + '"')
-        sys.stdout.write(generated)
-
-        for iteration in range(400):
-            x = np.zeros((1, maxlen, len(chars)))
-            for t, char in enumerate(sentence):
-                x[0, t, char_indices[char]] = 1.
-
-            preds = model.predict(x, verbose=0)[0]
-            next_index = sample(preds, temperature)
-            next_char = indices_char[next_index]
-
-            generated += next_char
-            sentence = sentence[1:] + next_char
-
-            sys.stdout.write(next_char)
-            sys.stdout.flush()
-
-            fo = open(outfile,'a')
-            fo.write(outstr + generated)    
-            fo.close()
-        print()
-
-
-
-
-
-    
-
-
-    # iteration += 1
-	
-
-
-
-
-
+    print(' -- Training --')
+    model.fit(X,Y, batch_size=128, nb_epoch=1)
