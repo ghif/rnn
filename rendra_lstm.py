@@ -82,8 +82,10 @@ def text_sampling(templist, ns=400):
         sentence = text[start_idx: start_idx + maxlen]
         print('----- Generating with seed: "' + sentence + '"')
         outstr += ' -- Generating with seed : %s\n' % sentence
+        outstr += sentence
 
-        generated = ''
+        generated = ''+sentence
+        
         for iteration in range(ns):
             x = np.zeros((1, maxlen, len(chars)))
             for t, char in enumerate(sentence):
@@ -98,7 +100,6 @@ def text_sampling(templist, ns=400):
             sentence = sentence[1:] + next_char
 
             
-        print()
         print(generated)
         outstr += '\n\n'
 
