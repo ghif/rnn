@@ -11,6 +11,9 @@ import sys
 
 from myutils import *
 
+import gzip
+import cPickle as pickle
+
 
 
 # Data I/O
@@ -104,6 +107,8 @@ def text_sampling(templist, ns=400):
     return outstr
 
 
+losses = []
+perplexities = []
 for iteration in range(1, 1000):
     print()
     outstr = ''
@@ -122,9 +127,39 @@ for iteration in range(1, 1000):
     generated = text_sampling([0.2, 0.5, 1., 1.2], ns=ns)
     outstr += generated
 
+    
+
+    print(' -- Training --')
+    # model.fit(X,Y, batch_size=128, nb_epoch=1)
+    progbar = generic_utils.Progbar(X.shape[0])
+
+    loss_avg = 0.
+    ppl = 0. #perplexity
+
+    for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
+        train_score = model.train_on_batch(X_batch, Y_batch)
+        progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
+        loss_avg += train_score
+
+        # compute perplexity here
+        
+
+
+    loss_avg = loss_avg / batch_size
+    print(' -- (Averaged) train loss : ',loss_avg)
+
+    outstr += '-- (Averaged) train loss'
+    losses.append(loss_avg)
+
+    # store the training progress incl. the generated text
     fo = open(outfile,'a')
     fo.write(outstr)    
     fo.close()
 
-    print(' -- Training --')
-    model.fit(X,Y, batch_size=128, nb_epoch=1)
+
+    # store the other numerical results
+    res = {'losses':losses}
+    res = {'weights':model.get_weights()}
+    pickle.dump(res, gzip.open('samples_lstm_res.pkl.gz','w'))
+
+

@@ -75,9 +75,9 @@ model.add(Activation('softmax'))
 
 model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-# outstr = ''
-# fo = open(outfile,'w')
-# fo.close()
+outstr = ''
+fo = open(outfile,'w')
+fo.close()
 
 def text_sampling(templist, ns=400):
     start_idx = np.random.randint(0, len(text) - maxlen - 1)
@@ -98,11 +98,11 @@ def text_sampling(templist, ns=400):
             # for t, char in enumerate(sentence):
             #     x[0, t, char_indices[char]] = 1.
 
-            y = model.predict(x, verbose=0)
-            print('x : ',x.shape)
-            print(x)
-            print('y : ',y.shape)
-            print(y)
+            y = model.predict(x, verbose=0)[0,0]
+            # print('x : ',x.shape)
+            # print(x)
+            # print('y : ',y.shape)
+            # print(y)
             next_index = sample(y, temperature)
             next_char = indices_char[next_index]
 
@@ -136,9 +136,9 @@ for iteration in range(1, 1000):
     generated = text_sampling([0.2, 0.5, 1., 1.2], ns=ns)
     outstr += generated
 
-    # fo = open(outfile,'a')
-    # fo.write(outstr)    
-    # fo.close()
+    fo = open(outfile,'a')
+    fo.write(outstr)    
+    fo.close()
 
-    # print(' -- Training --')
-    # model.fit(X,Y, batch_size=128, nb_epoch=1)
+    print(' -- Training --')
+    model.fit(X,Y, batch_size=128, nb_epoch=1)
