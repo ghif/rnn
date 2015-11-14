@@ -24,7 +24,6 @@ def create_train_val(X, Y, p=0.7):
 
 
     inds = np.random.permutation(n)
-
     
     inds_train = inds[:n_train]
     inds_val = [i for i in inds if i not in set(inds_train)]
