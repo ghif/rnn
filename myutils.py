@@ -40,4 +40,3 @@ def sample(z, temperature=1.0):
     z = np.log(z) / temperature
     z = np.exp(z) / np.sum(np.exp(z))
     return np.argmax(np.random.multinomial(1, z, 1))
-
