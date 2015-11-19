@@ -22,8 +22,8 @@ print outfile,' ---- ', outparams
 
 # hyper-parameters
 seqlen = 50 # 
-learning_rate = 1e-3
-batch_size = 1
+learning_rate = 5e-3
+batch_size = 20
 
 # Data I/O
 vocabs = initvocab('data/samples.txt', seqlen)
