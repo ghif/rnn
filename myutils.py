@@ -120,7 +120,7 @@ def text_sampling_char(
         sentences[0, 0, char_indices[char]] = 1
         generated = ''
         for i in range(ns-1):
-            y = model.predict_proba(sentences)[0,i,:]
+            y = model.predict(sentences, verbose=0)[0,i,:]
             next_idx = sample(y, temperature)
             sentences[0, i+1, next_idx] = 1
             next_char = indices_char[next_idx]            

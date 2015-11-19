@@ -14,13 +14,14 @@ import cPickle as pickle
 import gzip
 
 
-
-outfile = 'sample2_char_out.txt'
+# Outputs
+outfile = 'sample4_char_out.txt'
 print(outfile)
+outparams = 'samples4_char_lstm_res.pkl.gz'
 
 # hyper-parameters
 seqlen = 50 # 
-batch_size = 1
+batch_size = 20
 
 # Data I/O
 vocabs = initvocab('data/samples.txt', seqlen)
@@ -48,22 +49,31 @@ for i, sent in enumerate(sents):
         Y[i, t, char_indices[char]] = 1
         prev_char = char
 
-
-    
-
 # ############
 
 # build the model: 2 stacked LSTM
 print('Build model...')
 model = Sequential()
-model.add(LSTM(128, return_sequences=True, truncate_gradient=5, input_shape=(seqlen, inputsize)))
+model.add(LSTM(76, 
+    return_sequences=True, 
+    truncate_gradient=5, 
+    input_dim=inputsize)
+)
 # model.add(Dropout(0.2))
-model.add(LSTM(100, return_sequences=True, truncate_gradient=5))
+model.add(LSTM(80, 
+    return_sequences=True, 
+    truncate_gradient=5)
+)
 # model.add(Dropout(0.2))
+model.add(LSTM(90, 
+    return_sequences=True, 
+    truncate_gradient=5)
+)
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+opt = RMSprop(lr=1e-2, rho=0.9, epsilon=1e-6)
+model.compile(loss='categorical_crossentropy', optimizer=opt)
 
 outstr = ''
 fo = open(outfile,'w')
@@ -72,6 +82,7 @@ fo.close()
 
 
 losses = []
+ppls = []
 for iteration in range(1, 500):
     print()
     outstr = ''
@@ -85,13 +96,14 @@ for iteration in range(1, 500):
     print('*' * 50)
     outstr += '*******\n'
 
-
-    print(' -- Text sampling ---')
-    generated = text_sampling_char(
-        model,vocabs,
-        [0.2, 0.5, 1., 1.2], 
-        ns=200)
-    outstr += generated
+    if iteration % 10 == 0:
+        print(' -- Text sampling ---')
+        temperatures = [0.2, 0.5, 1., 1.2]
+        generated = text_sampling_char(
+            model,vocabs,
+            temperatures, 
+            ns=200)
+        outstr += generated
 
     fo = open(outfile,'a')
     fo.write(outstr)    
@@ -104,18 +116,25 @@ for iteration in range(1, 500):
     loss_avg = 0.
     ppl = 0. #perplexity
 
+    n_batches = 0
     for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
         train_score = model.train_on_batch(X_batch, Y_batch)
         progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
         loss_avg += train_score
+        n_batches += 1
 
         # compute perplexity here
-        
+        probs = model.predict(X_batch)
+        ppl += -np.sum(np.multiply(Y_batch, np.log2(probs)))
 
 
-    loss_avg = loss_avg / batch_size
-    print(' \n-- (Averaged) train loss : ',loss_avg)
+    loss_avg = loss_avg / n_batches
+    ppl = ppl / n_batches
+    print('\n -- (Averaged) Perplexity : ',ppl)
+    outstr += '-- (Averaged) Perplexity : %s\n' % ppl
+    ppls.append(ppl)
 
+    print('\n -- (Averaged) train loss : ',loss_avg)
     outstr += '-- (Averaged) train loss : %s\n' % loss_avg
     losses.append(loss_avg)
 
@@ -127,5 +146,6 @@ for iteration in range(1, 500):
 
     # store the other numerical results
     res = {'losses':losses}
+    res = {'ppls':ppls}
     res = {'weights':model.get_weights()}
-    pickle.dump(res, gzip.open('samples2_char_lstm_res.pkl.gz','w'))
+    pickle.dump(res, gzip.open(outparams,'w'))
