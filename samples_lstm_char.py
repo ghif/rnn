@@ -125,16 +125,17 @@ for iteration in range(1, 500):
 
         # compute perplexity here
         probs = model.predict(X_batch)
-        ppl += -np.sum(np.multiply(Y_batch, np.log2(probs)))
+        ppl += -np.sum(np.multiply(Y_batch, np.log2(probs))) / batch_size
 
 
     loss_avg = loss_avg / n_batches
     ppl = ppl / n_batches
-    print('\n -- (Averaged) Perplexity : ',ppl)
+
+    print '-- (Averaged) Perplexity : ',ppl
     outstr += '-- (Averaged) Perplexity : %s\n' % ppl
     ppls.append(ppl)
 
-    print('\n -- (Averaged) train loss : ',loss_avg)
+    print '-- (Averaged) train loss : ',loss_avg
     outstr += '-- (Averaged) train loss : %s\n' % loss_avg
     losses.append(loss_avg)
 
