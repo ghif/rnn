@@ -179,6 +179,9 @@ def train_rnn(model, vocabs,
 
     losses = []
     ppls = []
+    elapsed_times = []
+    
+
     for itr in range(1, iteration+1):
         print()
         outstr = ''
@@ -205,6 +208,7 @@ def train_rnn(model, vocabs,
 
         print(' -- Training --')
         
+        start_time = time.time()
 
         loss_avg = 0.
         ppl = 0. #perplexity
@@ -225,6 +229,9 @@ def train_rnn(model, vocabs,
             probs = model.predict(X_batch)
             ppl += perplexity(Y_batch, probs)
 
+
+        elapsed_time = time.time() - start_time
+        elapsed_times.append(elapsed_time)
 
 
         loss_avg = loss_avg / n_batches
@@ -249,13 +256,8 @@ def train_rnn(model, vocabs,
         # store the other numerical results
         res = {'losses':losses, 
                 'ppls':ppls,
-                'weights': model.get_weights(),
-                'config': model.get_config(),
-                'seqlen':seqlen,
-                'learning_rate':learning_rate,
-                'batch_size':batch_size,
-                'lettersize':lettersize,
-                'clipval':clipval
+                'elapsed_times':elapsed_times,
+                'weights': model.get_weights()
         }
         
         pickle.dump(res, gzip.open(paramsfile,'w'))
