@@ -1,6 +1,7 @@
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
 from keras.layers.recurrent import SimpleRNN, LSTM
+from keras.layers.embeddings import Embedding
 from keras.optimizers import RMSprop
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import np_utils, generic_utils
@@ -24,6 +25,8 @@ print outfile,' ---- ', outparams
 seqlen = 50 # 
 learning_rate = 5e-3
 batch_size = 20
+lettersize = 40
+clipval = 5 # -1 : no clipping
 
 # Data I/O
 vocabs = initvocab('data/samples.txt', seqlen)
@@ -54,22 +57,18 @@ for i, sent in enumerate(sents):
 # ############
 
 # build the model: 2 stacked LSTM
-print('Build model...')
+print('Build LSTM...')
 model = Sequential()
-model.add(LSTM(76, 
+model.add(Embedding(inputsize, lettersize))
+model.add(LSTM(128, 
     return_sequences=True, 
-    truncate_gradient=5, 
+    truncate_gradient=clipval, 
     input_dim=inputsize)
 )
 # model.add(Dropout(0.2))
-model.add(LSTM(80, 
+model.add(LSTM(100, 
     return_sequences=True, 
-    truncate_gradient=5)
-)
-# model.add(Dropout(0.2))
-model.add(LSTM(90, 
-    return_sequences=True, 
-    truncate_gradient=5)
+    truncate_gradient=clipval)
 )
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
