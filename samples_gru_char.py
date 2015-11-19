@@ -160,7 +160,7 @@ for iteration in range(1, 500):
 
         # perplexity
         probs = model.predict(X_batch)
-        ppl += (-np.sum(np.multiply(Y_batch, np.log2(probs))) /  (seqlen * batch_size)) ** 2
+        ppl += perplexity(Y_batch, probs)
 
 
 

@@ -23,7 +23,7 @@ outparams = 'samples4_char_lstm_res.pkl.gz'
 # hyper-parameters
 seqlen = 50 # 
 learning_rate = 1e-3
-batch_size = 2
+batch_size = 1
 
 # Data I/O
 vocabs = initvocab('data/samples.txt', seqlen)
@@ -130,7 +130,7 @@ for iteration in range(1, 500):
 
         # perplexity
         probs = model.predict(X_batch)
-        ppl += -np.sum(np.multiply(Y_batch, np.log2(probs))) /  (seqlen * batch_size)
+        ppl += perplexity(Y_batch, probs)
 
 
     loss_avg = loss_avg / n_batches
