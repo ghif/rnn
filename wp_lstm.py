@@ -10,6 +10,7 @@ from keras.regularizers import l2
 
 import numpy as np
 import sys
+import time
 
 from myutils import *
 import cPickle as pickle
@@ -85,6 +86,7 @@ fo.close()
 
 losses = []
 ppls = []
+elapsed_time = []
 for iteration in range(1, 500):
     print()
     outstr = ''
