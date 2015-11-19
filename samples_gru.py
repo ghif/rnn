@@ -25,7 +25,7 @@ import gzip
 # Outputs
 outfile = 'results/samples_gru_out.txt'
 paramsfile = 'models/samples_gru_res.pkl.gz'
-print outfile,' ---- ', outparams
+print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 50 # 
