@@ -16,9 +16,9 @@ import gzip
 
 
 # Outputs
-outfile = 'sample4_char_out.txt'
-print(outfile)
-outparams = 'samples4_char_lstm_res.pkl.gz'
+outfile = 'results/samples_lstm_out.txt'
+outparams = 'models/samples_lstm_res.pkl.gz'
+print outfile,' ---- ', outparams
 
 # hyper-parameters
 seqlen = 50 # 
@@ -108,9 +108,6 @@ for iteration in range(1, 500):
         
         outstr += generated
 
-    fo = open(outfile,'a')
-    fo.write(outstr)    
-    fo.close()
 
     print(' -- Training --')
     
@@ -140,6 +137,7 @@ for iteration in range(1, 500):
     print '-- (Averaged) Perplexity : ',ppl
     outstr += '-- (Averaged) Perplexity : %s\n' % ppl
     ppls.append(ppl)
+    outstr += '-- (Median) Perplexity : %s\n' % np.median(ppls)
 
     print '-- (Averaged) train loss : ',loss_avg
     outstr += '-- (Averaged) train loss : %s\n' % loss_avg
@@ -152,7 +150,15 @@ for iteration in range(1, 500):
 
 
     # store the other numerical results
-    res = {'losses':losses}
-    res = {'ppls':ppls}
-    res = {'weights':model.get_weights()}
+    res = {'losses':losses, 
+            'ppls':ppls,
+            'weights': model.get_weights(),
+            'config': model.get_config(),
+            'seqlen':seqlen,
+            'learning_rate':learning_rate,
+            'batch_size':batch_size,
+            'lettersize':lettersize,
+            'clipval':clipval
+    }
+    
     pickle.dump(res, gzip.open(outparams,'w'))

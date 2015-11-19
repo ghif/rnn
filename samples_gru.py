@@ -1,7 +1,7 @@
 '''
     Text generation using GRU on samples.txt
 
-    - Looks good on iteration >= 40
+    - Looks good on iteration >= 15
     - The convergence rate is still much slower than that of Julia
 '''
 
@@ -25,8 +25,8 @@ import gzip
 
 
 # Outputs
-outfile = 'results/sample3_char_gru_out.txt'
-outparams = 'models/samples3_char_gru_res.pkl.gz'
+outfile = 'results/sample3_gru_out.txt'
+outparams = 'models/samples3_gru_res.pkl.gz'
 print outfile,' ---- ', outparams
 
 # hyper-parameters
@@ -128,9 +128,6 @@ for iteration in range(1, 500):
         
         outstr += generated
 
-    fo = open(outfile,'a')
-    fo.write(outstr)    
-    fo.close()
 
     print(' -- Training --')
     
