@@ -21,9 +21,9 @@ print(outfile)
 outparams = 'samples4_char_lstm_res.pkl.gz'
 
 # hyper-parameters
-seqlen = 100 # 
+seqlen = 50 # 
 learning_rate = 1e-3
-batch_size = 20
+batch_size = 2
 
 # Data I/O
 vocabs = initvocab('data/samples.txt', seqlen)
@@ -98,18 +98,14 @@ for iteration in range(1, 500):
     print('*' * 50)
     outstr += '*******\n'
 
-    if iteration % 10 == 0:
+    if iteration % 5 == 0:
         print(' -- Text sampling ---')
         temperatures = [0.7, 1]
         generated = text_sampling_char(
             model,vocabs,
             temperatures, 
-            ns=seqlen)
-        generated = text_sampling_char(
-            model,vocabs,
-            [-1], 
-            ns=seqlen,
-            sampled=False)
+            ns=200)
+        
         outstr += generated
 
     fo = open(outfile,'a')

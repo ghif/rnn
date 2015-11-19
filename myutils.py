@@ -74,7 +74,7 @@ def initvocab(datapath, seqlen):
 
 def text_sampling_char(
     model,vocabs,templist,
-    ns=200, sampled=True):
+    ns=200):
     
     sents = vocabs['sents']
     vocab = vocabs['vocab']
@@ -89,38 +89,70 @@ def text_sampling_char(
     seqlen = len(sent)
 
     start_idx = np.random.randint(0, len(sent))
+    char = sent[start_idx]
 
     outstr = ''
 
     for temperature in templist:
-        if sampled:
-            print(' -- Temperature : ', temperature)
-            outstr += ' -- Temperature : %f\n' % (temperature)
-        else:
-            print ' -- ARGMAX -- '
-            outstr += ' -- ARGMAX --\n'
         
-        char = sent[start_idx]
+        print(' -- Temperature : ', temperature)
+        outstr += ' -- Temperature : %f\n' % (temperature)
+        
+        
+        
         print('----- Generating with seed: "' + char + '"')
         outstr += ' -- Generating with seed : %s\n' % char    
 
+        generated = ''
+
+        #### temperature ########
         sentences = np.zeros((1, ns, inputsize))
         sentences[0, 0, char_indices[char]] = 1
-        generated = ''
+        
         for i in range(ns-1):
-            y = model.predict(sentences, verbose=0)[0,i,:]
-            if sampled:
-                next_idx = sample(y, temperature)
-            else:
-                next_idx = np.argmax(y)
+            y = model.predict(sentences, verbose=0)[0,i,:]            
+            next_idx = sample(y, temperature)
+            
+            
 
             sentences[0, i+1, next_idx] = 1
             next_char = indices_char[next_idx]            
             generated += next_char
 
+        ###########################
+
+
         print(generated)
         outstr += generated
 
+
         outstr += '\n\n'
+
+    ### Print ARGMAX ####
+    print ' -- ARGMAX -- '
+    outstr += ' -- ARGMAX --\n'
+    print('----- Generating with seed: "' + char + '"')
+    outstr += ' -- Generating with seed : %s\n' % char    
+
+    generated = ''
+
+    sentences = np.zeros((1, ns, inputsize))
+    sentences[0, 0, char_indices[char]] = 1
+    
+    for i in range(ns-1):
+        y = model.predict(sentences, verbose=0)[0,i,:]            
+        next_idx = np.argmax(y)
+        
+        sentences[0, i+1, next_idx] = 1
+        next_char = indices_char[next_idx]            
+        generated += next_char
+
+    
+    print(generated)
+    outstr += generated
+    outstr += '\n\n'
+
+
+
 
     return outstr
