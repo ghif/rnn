@@ -25,14 +25,14 @@ import gzip
 
 
 # Outputs
-outfile = 'sample2_char_gru_out.txt'
-print(outfile)
-outparams = 'samples2_char_gru_res.pkl.gz'
+outfile = 'results/sample3_char_gru_out.txt'
+outparams = 'models/samples3_char_gru_res.pkl.gz'
+print(outfile,' - ', outparams)
 
 # hyper-parameters
 seqlen = 50 # 
-learning_rate = 6e-3
-batch_size = 10
+learning_rate = 8e-3
+batch_size = 20
 lettersize = 40
 clipval = 5 # -1 : no clipping
 
@@ -103,7 +103,6 @@ fo = open(outfile,'w')
 fo.close()
 
 
-
 losses = []
 ppls = []
 for iteration in range(1, 500):
@@ -160,7 +159,6 @@ for iteration in range(1, 500):
         # perplexity
         probs = model.predict(X_batch)
         ppl += perplexity(Y_batch, probs)
-
 
 
 
