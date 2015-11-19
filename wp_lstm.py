@@ -17,19 +17,19 @@ import gzip
 
 
 # Outputs
-outfile = 'results/samples_lstm_out.txt'
-outparams = 'models/samples_lstm_res.pkl.gz'
+outfile = 'results/wp_lstm_out.txt'
+outparams = 'models/wp_lstm_res.pkl.gz'
 print outfile,' ---- ', outparams
 
 # hyper-parameters
-seqlen = 50 # 
+seqlen = 100 # 
 learning_rate = 5e-3
-batch_size = 20
+batch_size = 100
 lettersize = 40
 clipval = 5 # -1 : no clipping
 
 # Data I/O
-vocabs = initvocab('data/samples.txt', seqlen)
+vocabs = initvocab('data/warpeace_input.txt', seqlen)
 text = vocabs['text']
 sents = vocabs['sents']
 vocab = vocabs['vocab']
@@ -39,6 +39,7 @@ indices_char = vocabs['indices_char']
 inputsize = len(vocab)
 outputsize = inputsize
 n = len(sents)
+print 'Corpus length: ', len(text), ', # vocabulary: ', inputsize, ', # '
 
 
 print('Vectorization...')
@@ -60,13 +61,13 @@ for i, sent in enumerate(sents):
 print('Build LSTM...')
 model = Sequential()
 model.add(Embedding(inputsize, lettersize))
-model.add(LSTM(128, 
+model.add(LSTM(512, 
     return_sequences=True, 
     truncate_gradient=clipval, 
     input_dim=inputsize)
 )
 # model.add(Dropout(0.2))
-model.add(LSTM(100, 
+model.add(LSTM(512, 
     return_sequences=True, 
     truncate_gradient=clipval)
 )
