@@ -1,3 +1,10 @@
+'''
+    Text generation using GRU on samples.txt
+
+    - Looks good on iteration >= 40
+    - The convergence rate is still much slower than that of Julia
+'''
+
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
 from keras.layers.recurrent import GRU
@@ -14,6 +21,7 @@ import sys
 from myutils import *
 import cPickle as pickle
 import gzip
+
 
 
 # Outputs
@@ -164,6 +172,7 @@ for iteration in range(1, 500):
     print '-- (Averaged) Perplexity : ',ppl
     outstr += '-- (Averaged) Perplexity : %s\n' % ppl
     ppls.append(ppl)
+    outstr += '-- (Median) Perplexity : %s\n' % np.median(ppls)
 
     print '-- (Averaged) train loss : ',loss_avg
     outstr += '-- (Averaged) train loss : %s\n' % loss_avg
