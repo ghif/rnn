@@ -25,13 +25,13 @@ import gzip
 
 
 # Outputs
-outfile = 'sample_char_gru_out.txt'
+outfile = 'sample2_char_gru_out.txt'
 print(outfile)
-outparams = 'samples_char_gru_res.pkl.gz'
+outparams = 'samples2_char_gru_res.pkl.gz'
 
 # hyper-parameters
 seqlen = 50 # 
-learning_rate = 1e-3
+learning_rate = 6e-3
 batch_size = 10
 lettersize = 40
 clipval = 5 # -1 : no clipping

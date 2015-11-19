@@ -159,5 +159,5 @@ def text_sampling_char(
 
 def perplexity(Y, P):
     [batch_size, seqlen, _] = Y.shape
-    ppl = (-np.sum(np.multiply(Y_batch, np.log2(probs))) /  (seqlen * batch_size)) ** 2
+    ppl = (-np.sum(np.multiply(Y, np.log2(P))) /  (seqlen * batch_size)) ** 2
     return ppl
