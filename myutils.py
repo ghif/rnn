@@ -74,7 +74,7 @@ def initvocab(datapath, seqlen):
 
 def text_sampling_char(
     model,vocabs,templist,
-    ns=200):
+    ns=200, sampled=True):
     
     sents = vocabs['sents']
     vocab = vocabs['vocab']
@@ -91,37 +91,29 @@ def text_sampling_char(
     start_idx = np.random.randint(0, len(sent))
 
     outstr = ''
+
     for temperature in templist:
-        print(' -- Temperature : ', temperature)
-        outstr += ' -- Temperature : %f\n' % (temperature)
+        if sampled:
+            print(' -- Temperature : ', temperature)
+            outstr += ' -- Temperature : %f\n' % (temperature)
+        else:
+            print ' -- ARGMAX -- '
+            outstr += ' -- ARGMAX --\n'
         
         char = sent[start_idx]
         print('----- Generating with seed: "' + char + '"')
-        outstr += ' -- Generating with seed : %s\n' % char
-
-        # generated = ''
-        # for iteration in range(ns):
-        #     x = np.zeros((1, 1, inputsize))
-        #     x[0, 0, char_indices[char]] = 1
-
-        #     y = model.predict(x, verbose=0)[0,0]
-            
-        #     next_index = sample(y, temperature)
-        #     next_char = indices_char[next_index]
-
-        #     outstr += next_char
-        #     generated += next_char
-        #     char = next_char
-
-        # print(generated)
-
+        outstr += ' -- Generating with seed : %s\n' % char    
 
         sentences = np.zeros((1, ns, inputsize))
         sentences[0, 0, char_indices[char]] = 1
         generated = ''
         for i in range(ns-1):
             y = model.predict(sentences, verbose=0)[0,i,:]
-            next_idx = sample(y, temperature)
+            if sampled:
+                next_idx = sample(y, temperature)
+            else:
+                next_idx = np.argmax(y)
+
             sentences[0, i+1, next_idx] = 1
             next_char = indices_char[next_idx]            
             generated += next_char

@@ -4,6 +4,7 @@ from keras.layers.recurrent import SimpleRNN, LSTM
 from keras.optimizers import RMSprop
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import np_utils, generic_utils
+from keras.regularizers import l2
 
 
 import numpy as np
@@ -20,7 +21,8 @@ print(outfile)
 outparams = 'samples4_char_lstm_res.pkl.gz'
 
 # hyper-parameters
-seqlen = 50 # 
+seqlen = 100 # 
+learning_rate = 1e-3
 batch_size = 20
 
 # Data I/O
@@ -72,7 +74,7 @@ model.add(LSTM(90,
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-opt = RMSprop(lr=1e-2, rho=0.9, epsilon=1e-6)
+opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6)
 model.compile(loss='categorical_crossentropy', optimizer=opt)
 
 outstr = ''
@@ -98,11 +100,16 @@ for iteration in range(1, 500):
 
     if iteration % 10 == 0:
         print(' -- Text sampling ---')
-        temperatures = [0.2, 0.5, 1., 1.2]
+        temperatures = [0.7, 1]
         generated = text_sampling_char(
             model,vocabs,
             temperatures, 
-            ns=200)
+            ns=seqlen)
+        generated = text_sampling_char(
+            model,vocabs,
+            [-1], 
+            ns=seqlen,
+            sampled=False)
         outstr += generated
 
     fo = open(outfile,'a')
@@ -120,17 +127,20 @@ for iteration in range(1, 500):
     for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
         train_score = model.train_on_batch(X_batch, Y_batch)
         progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
+
+        # log loss
         loss_avg += train_score
         n_batches += 1
 
-        # compute perplexity here
+        # perplexity
         probs = model.predict(X_batch)
-        ppl += -np.sum(np.multiply(Y_batch, np.log2(probs))) / batch_size
+        ppl += -np.sum(np.multiply(Y_batch, np.log2(probs))) /  (seqlen * batch_size)
 
 
     loss_avg = loss_avg / n_batches
     ppl = ppl / n_batches
 
+    print ''
     print '-- (Averaged) Perplexity : ',ppl
     outstr += '-- (Averaged) Perplexity : %s\n' % ppl
     ppls.append(ppl)
