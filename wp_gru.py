@@ -1,34 +1,42 @@
+'''
+    Text generation using GRU on samples.txt
+
+    - Looks good on iteration >= 15
+    - The convergence rate is still much slower than that of Julia
+'''
+
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
-from keras.layers.recurrent import SimpleRNN, LSTM
+from keras.layers.recurrent import GRU
 from keras.layers.embeddings import Embedding
 from keras.optimizers import RMSprop
 from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import np_utils, generic_utils
 from keras.regularizers import l2
 
 
 import numpy as np
 import sys
-import time
 
 from myutils import *
+
 import cPickle as pickle
 import gzip
 
 
 # Outputs
-outfile = 'results/wp_lstm_out.txt'
-paramsfile = 'models/wp_lstm_weights.pkl.gz'
-configfile = 'models/wp_lstm_config.pkl.gz'
+outfile = 'results/wp_gru_out.txt'
+paramsfile = 'models/wp_gru_weights.pkl.gz'
+configfile = 'models/wp_gru_config.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 100 # 
-learning_rate = 5e-3
-batch_size = 100
+learning_rate = 7e-3
+batch_size = 128
 lettersize = 40
 clipval = 5 # -1 : no clipping
+
+
 
 # Data I/O
 vocabs = initvocab('data/warpeace_input.txt', seqlen)
@@ -41,7 +49,6 @@ indices_char = vocabs['indices_char']
 inputsize = len(vocab)
 outputsize = inputsize
 n = len(sents)
-print 'Corpus length: ', len(text), ', # vocabulary: ', inputsize, ', # '
 
 
 print('Vectorization...')
@@ -53,31 +60,46 @@ for i, sent in enumerate(sents):
     for t in range(seqlen):
         char = sent[t]
         # print(prev_char ,' --- ', char)
+        # X[i, t, char_indices[prev_char]] = 1
         X[i, t] = char_indices[prev_char]
         Y[i, t, char_indices[char]] = 1
         prev_char = char
 
 # ############
 
-# build the model: 2 stacked LSTM
-print('Build LSTM...')
+print('Build GRU...')
 model = Sequential()
 model.add(Embedding(inputsize, lettersize))
-model.add(LSTM(512, 
+
+model.add(GRU(76, 
     return_sequences=True, 
-    truncate_gradient=clipval, 
+    inner_activation='sigmoid',
+    activation='tanh',
+    truncate_gradient=clipval,
     input_dim=inputsize)
 )
 # model.add(Dropout(0.2))
-model.add(LSTM(512, 
-    return_sequences=True, 
-    truncate_gradient=clipval)
+model.add(GRU(80, 
+    return_sequences=True,
+    inner_activation='sigmoid',
+    activation='tanh',
+    truncate_gradient=clipval
+    )
+)
+# # model.add(Dropout(0.2))
+model.add(GRU(90, 
+    return_sequences=True,
+    inner_activation='sigmoid',
+    activation='tanh',
+    truncate_gradient=clipval
+    )
 )
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6)
 model.compile(loss='categorical_crossentropy', optimizer=opt)
+
 
 # Store configuration
 res = {'config': model.get_config(),
