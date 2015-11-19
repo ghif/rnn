@@ -8,6 +8,8 @@ from keras.utils import np_utils, generic_utils
 
 import numpy as np
 import sys
+import gzip
+import cPickle as pickle
 
 from myutils import *
 
@@ -20,7 +22,7 @@ chars = set(text)
 data_size, vocab_size = len(text), len(chars)
 print 'Corpus has %d characters, %d unique.' % (data_size, vocab_size)
 
-outfile = 'rendra_out.txt'
+outfile = 'rendra_cho_out.txt'
 print(outfile)
 
 # Char <-> Indices Mappings
@@ -30,8 +32,9 @@ indices_char = dict((i, c) for i, c in enumerate(chars))
 
 # hyper-parameters
 maxlen = 20 # sentence length, maxlen = 1 --> char-to-char, maxlen > 1 --> substring-to-char
-step = 3 # 
+step = 1 # 
 ns = 400 # number of samples
+batch_size = 128
 
 
 sentences = []
@@ -82,10 +85,8 @@ def text_sampling(templist, ns=400):
         sentence = text[start_idx: start_idx + maxlen]
         print('----- Generating with seed: "' + sentence + '"')
         outstr += ' -- Generating with seed : %s\n' % sentence
-        outstr += sentence
-
-        generated = ''+sentence
-        
+        outstr += '=== Below is the generated text === \n'
+        generated = '=== Below is the generated text === \n'
         for iteration in range(ns):
             x = np.zeros((1, maxlen, len(chars)))
             for t, char in enumerate(sentence):
@@ -106,6 +107,9 @@ def text_sampling(templist, ns=400):
     return outstr
 
 
+
+losses = []
+perplexities = []
 for iteration in range(1, 1000):
     print()
     outstr = ''
@@ -122,12 +126,42 @@ for iteration in range(1, 1000):
 
     print(' -- Text sampling ---')
     generated = text_sampling([0.2, 0.5, 1., 1.2], ns=ns)
-    print(generated)
     outstr += generated
 
+    
+
+    print(' -- Training --')
+    # model.fit(X,Y, batch_size=128, nb_epoch=1)
+    progbar = generic_utils.Progbar(X.shape[0])
+
+    loss_avg = 0.
+    ppl = 0. #perplexity
+
+
+    n_batch = 0
+    for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
+        train_score = model.train_on_batch(X_batch, Y_batch)
+        progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
+        loss_avg += train_score
+        n_batch += 1
+
+        # compute perplexity here
+        
+
+
+    loss_avg = loss_avg / n_batch
+    print(' -- (Averaged) train loss : ',loss_avg)
+
+    outstr += '-- (Averaged) train loss'
+    losses.append(loss_avg)
+
+    # store the training progress incl. the generated text
     fo = open(outfile,'a')
     fo.write(outstr)    
     fo.close()
 
-    print(' -- Training --')
-    model.fit(X,Y, batch_size=128, nb_epoch=1)
+
+    # store the other numerical results
+    res = {'losses':losses}
+    res = {'weights':model.get_weights()}
+    pickle.dump(res, gzip.open('rendra_lstm_cho_res.pkl.gz','w'))

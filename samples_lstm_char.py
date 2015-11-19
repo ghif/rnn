@@ -10,55 +10,45 @@ import numpy as np
 import sys
 
 from myutils import *
+import cPickle as pickle
+import gzip
 
 
 
-# Data I/O
-datapath = 'data/samples.txt'
-text = open(datapath, 'r').read().lower()
-chars = set(text) #vocab
-data_size, vocab_size = len(text), len(chars)
-print 'Corpus has %d characters, %d unique.' % (data_size, vocab_size)
-
-outfile = 'sample_char_out.txt'
+outfile = 'sample2_char_out.txt'
 print(outfile)
 
-# Char <-> Indices Mappings
-char_indices = dict((c, i) for i, c in enumerate(chars))
-indices_char = dict((i, c) for i, c in enumerate(chars))
-
-
 # hyper-parameters
-maxlen = 7 # 
-step = 1 # 
-ns = 200 # number of samples
+seqlen = 50 # 
+batch_size = 1
 
+# Data I/O
+vocabs = initvocab('data/samples.txt', seqlen)
+text = vocabs['text']
+sents = vocabs['sents']
+vocab = vocabs['vocab']
+char_indices = vocabs['char_indices']
+indices_char = vocabs['indices_char']
 
-# Generate Data
-sentences = []
-# next_chars = []
-next_sentences = []
-for i in range(0, len(text) - maxlen - 1, step):
-    sentences.append(text[i: i + maxlen])
-    # next_chars.append(text[i + maxlen])
-    next_sentences.append(text[i+1: i+maxlen+1])
-print('nb sequences:', len(sentences))
-
+inputsize = len(vocab)
+outputsize = inputsize
+n = len(sents)
 
 
 print('Vectorization...')
-n = len(sentences)
-X = np.zeros((n, maxlen, vocab_size), dtype=np.bool)
-Y = np.zeros((n, maxlen, vocab_size), dtype=np.bool)
+X = np.zeros((n, seqlen, inputsize), dtype='float32')
+Y = np.zeros((n, seqlen, inputsize), dtype='float32')
 
-for i, sentence in enumerate(sentences):
-    for t, char in enumerate(sentence):
-        X[i, t, char_indices[char]] = 1
-
-
-for i, sentence in enumerate(next_sentences):
-    for t, char in enumerate(sentence):
+for i, sent in enumerate(sents):
+    prev_char = '*'
+    for t in range(seqlen):
+        char = sent[t]
+        # print(prev_char ,' --- ', char)
+        X[i, t, char_indices[prev_char]] = 1
         Y[i, t, char_indices[char]] = 1
+        prev_char = char
+
+
     
 
 # ############
@@ -66,11 +56,11 @@ for i, sentence in enumerate(next_sentences):
 # build the model: 2 stacked LSTM
 print('Build model...')
 model = Sequential()
-model.add(LSTM(512, return_sequences=True, input_shape=(maxlen, vocab_size)))
-model.add(Dropout(0.2))
-model.add(LSTM(512, return_sequences=True))
-model.add(Dropout(0.2))
-model.add(TimeDistributedDense(vocab_size))
+model.add(LSTM(128, return_sequences=True, truncate_gradient=5, input_shape=(seqlen, inputsize)))
+# model.add(Dropout(0.2))
+model.add(LSTM(100, return_sequences=True, truncate_gradient=5))
+# model.add(Dropout(0.2))
+model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
 model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
@@ -79,46 +69,10 @@ outstr = ''
 fo = open(outfile,'w')
 fo.close()
 
-def text_sampling(templist, ns=400):
-    start_idx = np.random.randint(0, len(text) - maxlen - 1)
-
-    outstr = ''
-    for temperature in templist:
-        print(' -- Temperature : ', temperature)
-        outstr += ' -- Temperature : %f\n' % (temperature)
-        
-        char = text[start_idx]
-        print('----- Generating with seed: "' + char + '"')
-        outstr += ' -- Generating with seed : %s\n' % char
-
-        generated = ''
-        for iteration in range(ns):
-            x = np.zeros((1, 1, len(chars)))
-            x[0, 0, char_indices[char]] = 1
-            # for t, char in enumerate(sentence):
-            #     x[0, t, char_indices[char]] = 1.
-
-            y = model.predict(x, verbose=0)[0,0]
-            # print('x : ',x.shape)
-            # print(x)
-            # print('y : ',y.shape)
-            # print(y)
-            next_index = sample(y, temperature)
-            next_char = indices_char[next_index]
-
-            outstr += next_char
-            generated += next_char
-            # sentence = sentence[1:] + next_char
-            char = next_char
-
-            
-        print(generated)
-        outstr += '\n\n'
-
-    return outstr
 
 
-for iteration in range(1, 1000):
+losses = []
+for iteration in range(1, 500):
     print()
     outstr = ''
     print('*' * 50)
@@ -133,7 +87,10 @@ for iteration in range(1, 1000):
 
 
     print(' -- Text sampling ---')
-    generated = text_sampling([0.2, 0.5, 1., 1.2], ns=ns)
+    generated = text_sampling_char(
+        model,vocabs,
+        [0.2, 0.5, 1., 1.2], 
+        ns=200)
     outstr += generated
 
     fo = open(outfile,'a')
@@ -141,4 +98,34 @@ for iteration in range(1, 1000):
     fo.close()
 
     print(' -- Training --')
-    model.fit(X,Y, batch_size=128, nb_epoch=1)
+    
+    progbar = generic_utils.Progbar(X.shape[0])
+
+    loss_avg = 0.
+    ppl = 0. #perplexity
+
+    for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
+        train_score = model.train_on_batch(X_batch, Y_batch)
+        progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
+        loss_avg += train_score
+
+        # compute perplexity here
+        
+
+
+    loss_avg = loss_avg / batch_size
+    print(' \n-- (Averaged) train loss : ',loss_avg)
+
+    outstr += '-- (Averaged) train loss : %s\n' % loss_avg
+    losses.append(loss_avg)
+
+    # store the training progress incl. the generated text
+    fo = open(outfile,'a')
+    fo.write(outstr)    
+    fo.close()
+
+
+    # store the other numerical results
+    res = {'losses':losses}
+    res = {'weights':model.get_weights()}
+    pickle.dump(res, gzip.open('samples2_char_lstm_res.pkl.gz','w'))

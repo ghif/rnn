@@ -40,3 +40,95 @@ def sample(z, temperature=1.0):
     z = np.log(z) / temperature
     z = np.exp(z) / np.sum(np.exp(z))
     return np.argmax(np.random.multinomial(1, z, 1))
+
+
+def initvocab(datapath, seqlen):
+    text = open(datapath, 'r').read()
+
+    vocab = set(text)
+    # vocab.remove('\n')
+    vocab = sorted(vocab)
+    vocab = ['*'] + vocab
+
+
+    sents = []
+    step = 1
+    nsent = len(text) / seqlen
+    for i in range(nsent):
+        i1 = i*seqlen
+        i2 = i*seqlen + seqlen
+        sents.append(text[i1:i2])
+
+    char_indices = dict((c, i) for i, c in enumerate(vocab))
+    indices_char = dict((i, c) for i, c in enumerate(vocab))
+
+    vocabs = {'text':text,
+              'sents':sents,
+              'vocab':vocab,
+              'char_indices': char_indices,
+              'indices_char':indices_char}
+    
+    return vocabs
+
+
+
+def text_sampling_char(
+    model,vocabs,templist,
+    ns=200):
+    
+    sents = vocabs['sents']
+    vocab = vocabs['vocab']
+    text = vocabs['text']
+    char_indices = vocabs['char_indices']
+    indices_char = vocabs['indices_char']
+
+    inputsize = len(vocab)
+    
+    i = np.random.randint(0, len(sents))
+    sent = sents[i]
+    seqlen = len(sent)
+
+    start_idx = np.random.randint(0, len(sent))
+
+    outstr = ''
+    for temperature in templist:
+        print(' -- Temperature : ', temperature)
+        outstr += ' -- Temperature : %f\n' % (temperature)
+        
+        char = sent[start_idx]
+        print('----- Generating with seed: "' + char + '"')
+        outstr += ' -- Generating with seed : %s\n' % char
+
+        # generated = ''
+        # for iteration in range(ns):
+        #     x = np.zeros((1, 1, inputsize))
+        #     x[0, 0, char_indices[char]] = 1
+
+        #     y = model.predict(x, verbose=0)[0,0]
+            
+        #     next_index = sample(y, temperature)
+        #     next_char = indices_char[next_index]
+
+        #     outstr += next_char
+        #     generated += next_char
+        #     char = next_char
+
+        # print(generated)
+
+
+        sentences = np.zeros((1, ns, inputsize))
+        sentences[0, 0, char_indices[char]] = 1
+        generated = ''
+        for i in range(ns-1):
+            y = model.predict_proba(sentences)[0,i,:]
+            next_idx = sample(y, temperature)
+            sentences[0, i+1, next_idx] = 1
+            next_char = indices_char[next_idx]            
+            generated += next_char
+
+        print(generated)
+        outstr += generated
+
+        outstr += '\n\n'
+
+    return outstr
