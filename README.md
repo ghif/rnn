@@ -7,4 +7,4 @@
 
 ### War & Peace
 - wp_lstm.py: WORKING
-
+- wp_gru.py : WORKING
