@@ -74,7 +74,7 @@ def initvocab(datapath, seqlen):
 
 def text_sampling_char(
     model,vocabs,templist,
-    ns=200):
+    char='',ns=200):
     
     sents = vocabs['sents']
     vocab = vocabs['vocab']
@@ -88,8 +88,10 @@ def text_sampling_char(
     sent = sents[i]
     seqlen = len(sent)
 
-    start_idx = np.random.randint(0, len(sent))
-    char = sent[start_idx]
+    if not char:
+        start_idx = np.random.randint(0, len(sent))
+        char = sent[start_idx]
+    
 
     outstr = ''
 
