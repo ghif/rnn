@@ -100,6 +100,8 @@ model.add(Activation('softmax'))
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6)
 model.compile(loss='categorical_crossentropy', optimizer=opt)
 
+
+# Store configuration
 res = {'config': model.get_config(),
     'seqlen':seqlen,
     'learning_rate':learning_rate,
@@ -115,94 +117,3 @@ train_rnn(model, vocabs, X, Y,
     outfile=outfile, paramsfile=paramsfile
 ) #see myutils.py
 
-# fo = open(outfile,'w')
-# fo.close()
-
-# losses = []
-# ppls = []
-# for iteration in range(1, 500):
-#     print()
-#     outstr = ''
-#     print('*' * 50)
-#     outstr += '*******\n'
-    
-#     print('Iteration', iteration)
-#     outstr += 'Iteration : %d\n' % (iteration)
-
-    
-#     print('*' * 50)
-#     outstr += '*******\n'
-
-#     if iteration % 5 == 0:
-#         print(' -- Text sampling ---')
-#         temperatures = [0.7, 1]
-#         generated = text_sampling_char(
-#             model,vocabs,
-#             temperatures, 
-#             ns=200)
-        
-#         outstr += generated
-
-
-#     print(' -- Training --')
-    
-
-#     loss_avg = 0.
-#     ppl = 0. #perplexity
-
-#     n_batches = 0
-
-#     progbar = generic_utils.Progbar(X.shape[0])
-#     for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
-#         # for t in range(seqlen):
-#         #     ix = np.argmax(X_batch[0,t,:])
-#         #     iy = np.argmax(Y_batch[0,t,:])
-
-#         #     print(indices_char[ix], '-- ',indices_char[iy])
-            
-#         train_score = model.train_on_batch(X_batch, Y_batch)
-#         progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
-
-
-#         # log loss
-#         loss_avg += train_score
-#         n_batches += 1
-
-#         # perplexity
-#         probs = model.predict(X_batch)
-#         ppl += perplexity(Y_batch, probs)
-
-
-
-#     loss_avg = loss_avg / n_batches
-#     ppl = ppl / n_batches
-
-#     print ''
-#     print '-- (Averaged) Perplexity : ',ppl
-#     outstr += '-- (Averaged) Perplexity : %s\n' % ppl
-#     ppls.append(ppl)
-#     outstr += '-- (Median) Perplexity : %s\n' % np.median(ppls)
-
-#     print '-- (Averaged) train loss : ',loss_avg
-#     outstr += '-- (Averaged) train loss : %s\n' % loss_avg
-#     losses.append(loss_avg)
-
-#     # store the training progress incl. the generated text
-#     fo = open(outfile,'a')
-#     fo.write(outstr)    
-#     fo.close()
-
-
-#     # store the other numerical results
-#     res = {'losses':losses, 
-#             'ppls':ppls,
-#             'weights': model.get_weights(),
-#             'config': model.get_config(),
-#             'seqlen':seqlen,
-#             'learning_rate':learning_rate,
-#             'batch_size':batch_size,
-#             'lettersize':lettersize,
-#             'clipval':clipval
-#     }
-    
-#     pickle.dump(res, gzip.open(outparams,'w'))
