@@ -1,8 +1,13 @@
 import numpy as np
 import random
+import gzip
+import cPickle as pickle
+import time
 
 from sklearn import preprocessing
-from keras.utils import np_utils
+from keras.utils import np_utils, generic_utils
+
+
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)
@@ -91,7 +96,7 @@ def text_sampling_char(
     if not char:
         start_idx = np.random.randint(0, len(sent))
         char = sent[start_idx]
-    
+
 
     outstr = ''
 
@@ -163,3 +168,98 @@ def perplexity(Y, P):
     [batch_size, seqlen, _] = Y.shape
     ppl = (-np.sum(np.multiply(Y, np.log2(P))) /  (seqlen * batch_size)) ** 2
     return ppl
+
+
+def train_rnn(model, vocabs,
+    X, Y, batch_size=20, iteration=500, 
+    outfile='outfile.txt', paramsfile='paramsfile.pkl.gz'):
+
+    fo = open(outfile,'w')
+    fo.close()
+
+    losses = []
+    ppls = []
+    elapsed_times = []
+    
+
+    for itr in range(1, iteration+1):
+        print()
+        outstr = ''
+        print('*' * 50)
+        outstr += '*******\n'
+        
+        print('Iteration', itr)
+        outstr += 'Iteration : %d\n' % (itr)
+
+        
+        print('*' * 50)
+        outstr += '*******\n'
+
+        if itr % 5 == 0:
+            print(' -- Text sampling ---')
+            temperatures = [0.7, 1]
+            generated = text_sampling_char(
+                model,vocabs,
+                temperatures, 
+                ns=200)
+            
+            outstr += generated
+
+
+        print(' -- Training --')
+        
+        start_time = time.time()
+
+        loss_avg = 0.
+        ppl = 0. #perplexity
+
+        n_batches = 0
+
+        progbar = generic_utils.Progbar(X.shape[0])
+        for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
+            train_score = model.train_on_batch(X_batch, Y_batch)
+            progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
+
+
+            # log loss
+            loss_avg += train_score
+            n_batches += 1
+
+            # perplexity
+            probs = model.predict(X_batch)
+            ppl += perplexity(Y_batch, probs)
+
+
+        elapsed_time = time.time() - start_time
+        elapsed_times.append(elapsed_time)
+
+
+        loss_avg = loss_avg / n_batches
+        ppl = ppl / n_batches
+
+        print ''
+        print '-- (Averaged) Perplexity : ',ppl
+        outstr += '-- (Averaged) Perplexity : %s\n' % ppl
+        ppls.append(ppl)
+        outstr += '-- (Median) Perplexity : %s\n' % np.median(ppls)
+
+        print '-- (Averaged) train loss : ',loss_avg
+        outstr += '-- (Averaged) train loss : %s\n' % loss_avg
+        losses.append(loss_avg)
+
+        # store the training progress incl. the generated text
+        fo = open(outfile,'a')
+        fo.write(outstr)    
+        fo.close()
+
+
+        # store the other numerical results
+        res = {'losses':losses, 
+                'ppls':ppls,
+                'elapsed_times':elapsed_times,
+                'weights': model.get_weights()
+        }
+        
+        pickle.dump(res, gzip.open(paramsfile,'w'))
+
+    return res
