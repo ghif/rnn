@@ -81,7 +81,7 @@ class LGRU(Recurrent):
 		x_r = T.dot(X, self.W_xz) + self.b_z
 		x_o = T.dot(X, self.W_xo) + self.b_o
 
-
+		
 		outputs, updates = theano.scan(
 		    self._step,
 		    sequences=[x_f, x_r, x_o, padded_mask, dict(input=X, taps=[-1])],
