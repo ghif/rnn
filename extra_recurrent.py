@@ -61,7 +61,7 @@ class LGRU(Recurrent):
 
 	
 	def _step(self,
-              xf_t, xz_t, xo_t, mask_tm1,
+              xf_t, xz_t, xo_t, mask_tm1, x_tm1,
               h_tm1,
               U_f, U_z, U_o):
 		h_mask_tm1 = mask_tm1 * h_tm1
@@ -84,8 +84,8 @@ class LGRU(Recurrent):
 
 		outputs, updates = theano.scan(
 		    self._step,
-		    # sequences=[x_f, x_r, x_o, padded_mask, dict(input=X, taps=[-1])],
-		    sequences=[x_f, x_r, x_o, padded_mask],
+		    sequences=[x_f, x_r, x_o, padded_mask, dict(input=X, taps=[-1])],
+		    # sequences=[x_f, x_r, x_o, padded_mask],
 		    outputs_info=T.unbroadcast(alloc_zeros_matrix(X.shape[1], self.output_dim), 1),
 		    non_sequences=[self.U_hf, self.U_xz, self.U_xo],
 		    truncate_gradient=self.truncate_gradient,
