@@ -71,12 +71,10 @@ class LGRU(Recurrent):
 
 
 		f_t = self.inner_activation(xf_t + T.dot(h_mask_tm1, U_f))
-		# z_t = self.inner_activation(xz_t + T.dot(h_mask_tm1, U_z))
 		z_t = xz_t + T.dot(x_tm1, U_z)
-		# o_t = self.activation(xo_t + T.dot(z_t * h_mask_tm1, U_o))
 		o_t = self.activation(xo_t + T.dot(x_tm1, U_o))
-
 		c_t = f_t * c_mask_tm1 + (1 - f_t) * z_t
+		# c_t = f_t * c_tm1 + (1 - f_t) * z_t
 		h_t = c_t * o_t
 
 
@@ -87,13 +85,13 @@ class LGRU(Recurrent):
 		padded_mask = self.get_padded_shuffled_mask(train, X, pad=1)
 		X = X.dimshuffle((1, 0, 2))
 
-		# Create the padded input: the sequence of X_tm1
+		# Create X_tm1 sequence through zero left-padding
 		Z = T.zeros_like(X)
 		X_tm1 = T.concatenate(([Z[0]], X), axis=0)
 
 		
 		x_f = T.dot(X, self.W_xf) + self.b_f
-		x_r = T.dot(X, self.W_xz) + self.b_z
+		x_z = T.dot(X, self.W_xz) + self.b_z
 		x_o = T.dot(X, self.W_xo) + self.b_o
 
 
@@ -102,8 +100,7 @@ class LGRU(Recurrent):
 
 		[outputs, cells], updates = theano.scan(
 		    self._step,
-		    sequences=[x_f, x_r, x_o, padded_mask, dict(input=X_tm1, taps=[-0])],
-		    # sequences=[x_f, x_r, x_o, padded_mask],
+		    sequences=[x_f, x_z, x_o, padded_mask, dict(input=X_tm1, taps=[-0])],
 		    outputs_info=[h_info, c_info],
 		    non_sequences=[self.U_hf, self.U_xz, self.U_xo],
 		    truncate_gradient=self.truncate_gradient,
@@ -129,5 +126,6 @@ class LGRU(Recurrent):
 		return dict(list(base_config.items()) + list(config.items()))
 
 
+# Tester
 if __name__ == "__main__":
 	model = LGRU(100)

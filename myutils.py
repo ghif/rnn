@@ -195,7 +195,7 @@ def train_rnn(model, vocabs,
         print('*' * 50)
         outstr += '*******\n'
 
-        if itr % 5 == 0:
+        if itr % 10 == 0:
             print(' -- Text sampling ---')
             temperatures = [0.7, 1]
             generated = text_sampling_char(

@@ -32,10 +32,11 @@ print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 50 # 
-learning_rate = 5e-3
+learning_rate = 1e-3
 batch_size = 20
 lettersize = 40
-clipval = 5 # -1 : no clipping
+clipval = -1 # -1 : no clipping
+
 
 
 
@@ -76,8 +77,8 @@ model.add(LGRU(76,
     return_sequences=True, 
     inner_activation='sigmoid',
     activation='tanh',
-    truncate_gradient=clipval,
-    input_dim=inputsize)
+    truncate_gradient=clipval
+    )
 )
 # model.add(Dropout(0.2))
 model.add(LGRU(80, 
