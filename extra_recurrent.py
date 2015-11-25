@@ -42,13 +42,13 @@ class LGRU(Recurrent):
 		# input/feature params
 		self.W_xz = self.init((input_dim, self.output_dim))
 		# self.U_xz = self.inner_init((self.output_dim, self.output_dim))
-		self.U_xz = self.inner_init((self.input_dim, self.output_dim))
+		self.U_xz = self.inner_init((input_dim, self.output_dim))
 		self.b_z = shared_zeros((self.output_dim))
 
 		# output params
 		self.W_xo = self.init((input_dim, self.output_dim))
 		# self.U_xo = self.inner_init((self.output_dim, self.output_dim))
-		self.U_xo = self.inner_init((self.input_dim, self.output_dim))
+		self.U_xo = self.inner_init((input_dim, self.output_dim))
 		self.b_o = shared_zeros((self.output_dim))
 
 		self.params = [
@@ -64,16 +64,23 @@ class LGRU(Recurrent):
 	
 	def _step(self,
               xf_t, xz_t, xo_t, mask_tm1, x_tm1,
-              h_tm1,
+              h_tm1, c_tm1,
               U_f, U_z, U_o):
 		h_mask_tm1 = mask_tm1 * h_tm1
+		c_mask_tm1 = mask_tm1 * c_tm1
+
+
 		f_t = self.inner_activation(xf_t + T.dot(h_mask_tm1, U_f))
-		z_t = self.inner_activation(xz_t + T.dot(h_mask_tm1, U_z))
-		o_t = self.activation(xo_t + T.dot(z_t * h_mask_tm1, U_o))
-		h_t = f_t * h_mask_tm1 + (1 - f_t) * o_t
+		# z_t = self.inner_activation(xz_t + T.dot(h_mask_tm1, U_z))
+		z_t = xz_t + T.dot(x_tm1, U_z)
+		# o_t = self.activation(xo_t + T.dot(z_t * h_mask_tm1, U_o))
+		o_t = self.activation(xo_t + T.dot(x_tm1, U_o))
+
+		c_t = f_t * c_mask_tm1 + (1 - f_t) * z_t
+		h_t = c_t * o_t
 
 
-		return h_t
+		return [h_t, c_t]
 
 	def get_output(self, train=False):
 		X = self.get_input(train)
@@ -90,11 +97,14 @@ class LGRU(Recurrent):
 		x_o = T.dot(X, self.W_xo) + self.b_o
 
 
-		outputs, updates = theano.scan(
+		h_info = T.unbroadcast(alloc_zeros_matrix(X.shape[1], self.output_dim), 1)
+		c_info = T.unbroadcast(alloc_zeros_matrix(X.shape[1], self.output_dim), 1)
+
+		[outputs, cells], updates = theano.scan(
 		    self._step,
 		    sequences=[x_f, x_r, x_o, padded_mask, dict(input=X_tm1, taps=[-0])],
 		    # sequences=[x_f, x_r, x_o, padded_mask],
-		    outputs_info=T.unbroadcast(alloc_zeros_matrix(X.shape[1], self.output_dim), 1),
+		    outputs_info=[h_info, c_info],
 		    non_sequences=[self.U_hf, self.U_xz, self.U_xo],
 		    truncate_gradient=self.truncate_gradient,
 		    go_backwards=self.go_backwards)
