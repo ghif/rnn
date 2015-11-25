@@ -41,12 +41,14 @@ class LGRU(Recurrent):
 
 		# input/feature params
 		self.W_xz = self.init((input_dim, self.output_dim))
-		self.U_xz = self.inner_init((self.output_dim, self.output_dim))
+		# self.U_xz = self.inner_init((self.output_dim, self.output_dim))
+		self.U_xz = self.inner_init((self.input_dim, self.output_dim))
 		self.b_z = shared_zeros((self.output_dim))
 
 		# output params
 		self.W_xo = self.init((input_dim, self.output_dim))
-		self.U_xo = self.inner_init((self.output_dim, self.output_dim))
+		# self.U_xo = self.inner_init((self.output_dim, self.output_dim))
+		self.U_xo = self.inner_init((self.input_dim, self.output_dim))
 		self.b_o = shared_zeros((self.output_dim))
 
 		self.params = [
@@ -69,6 +71,8 @@ class LGRU(Recurrent):
 		z_t = self.inner_activation(xz_t + T.dot(h_mask_tm1, U_z))
 		o_t = self.activation(xo_t + T.dot(z_t * h_mask_tm1, U_o))
 		h_t = f_t * h_mask_tm1 + (1 - f_t) * o_t
+
+
 		return h_t
 
 	def get_output(self, train=False):
@@ -76,7 +80,11 @@ class LGRU(Recurrent):
 		padded_mask = self.get_padded_shuffled_mask(train, X, pad=1)
 		X = X.dimshuffle((1, 0, 2))
 
+		# Create the padded input: the sequence of X_tm1
+		Z = T.zeros_like(X)
+		X_tm1 = T.concatenate(([Z[0]], X), axis=0)
 
+		
 		x_f = T.dot(X, self.W_xf) + self.b_f
 		x_r = T.dot(X, self.W_xz) + self.b_z
 		x_o = T.dot(X, self.W_xo) + self.b_o
@@ -84,7 +92,7 @@ class LGRU(Recurrent):
 
 		outputs, updates = theano.scan(
 		    self._step,
-		    sequences=[x_f, x_r, x_o, padded_mask, dict(input=X, taps=[-1])],
+		    sequences=[x_f, x_r, x_o, padded_mask, dict(input=X_tm1, taps=[-0])],
 		    # sequences=[x_f, x_r, x_o, padded_mask],
 		    outputs_info=T.unbroadcast(alloc_zeros_matrix(X.shape[1], self.output_dim), 1),
 		    non_sequences=[self.U_hf, self.U_xz, self.U_xo],
