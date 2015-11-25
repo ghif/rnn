@@ -74,7 +74,6 @@ class LGRU(Recurrent):
 		z_t = xz_t + T.dot(x_tm1, U_z)
 		o_t = self.activation(xo_t + T.dot(x_tm1, U_o))
 		c_t = f_t * c_mask_tm1 + (1 - f_t) * z_t
-		# c_t = f_t * c_tm1 + (1 - f_t) * z_t
 		h_t = c_t * o_t
 
 

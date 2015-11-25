@@ -12,6 +12,7 @@ from keras.layers.embeddings import Embedding
 from keras.optimizers import RMSprop
 
 
+
 import numpy as np
 import sys
 
@@ -22,23 +23,22 @@ import gzip
 
 
 # Outputs
-outfile = 'results/samples_lgru_out.txt'
-paramsfile = 'models/samples_lgru_weights.pkl.gz'
-configfile = 'models/samples_lgru_config.pkl.gz'
+outfile = 'results/wp_lgru_out.txt'
+paramsfile = 'models/wp_lgru_weights.pkl.gz'
+configfile = 'models/wp_lgru_config.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
-seqlen = 50 # 
+seqlen = 100 # 
 learning_rate = 1e-3
-batch_size = 20
+batch_size = 100
 lettersize = 40
 clipval = -1 # -1 : no clipping
 
 
 
-
 # Data I/O
-vocabs = initvocab('data/samples.txt', seqlen)
+vocabs = initvocab('data/warpeace_input.txt', seqlen)
 text = vocabs['text']
 sents = vocabs['sents']
 vocab = vocabs['vocab']
@@ -74,8 +74,8 @@ model.add(LGRU(76,
     return_sequences=True, 
     inner_activation='sigmoid',
     activation='tanh',
-    truncate_gradient=clipval
-    )
+    truncate_gradient=clipval,
+    input_dim=inputsize)
 )
 # model.add(Dropout(0.2))
 model.add(LGRU(80, 
@@ -115,4 +115,3 @@ train_rnn(model, vocabs, X, Y,
     batch_size=batch_size, iteration=500,
     outfile=outfile, paramsfile=paramsfile
 ) #see myutils.py
-
