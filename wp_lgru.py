@@ -23,9 +23,10 @@ import gzip
 
 
 # Outputs
-outfile = 'results/wp_lgru_out.txt'
-paramsfile = 'models/wp_lgru_weights.pkl.gz'
-configfile = 'models/wp_lgru_config.pkl.gz'
+t = 4 # trial
+outfile = 'results/wp_lgru_out'+str(t)+'.txt'
+paramsfile = 'models/wp_lgru_weights'+str(t)+'.pkl.gz'
+configfile = 'models/wp_lgru_config'+str(t)+'.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
@@ -33,7 +34,7 @@ seqlen = 100 #
 learning_rate = 1e-3
 batch_size = 100
 lettersize = 40
-clipval = -1 # -1 : no clipping
+clipval = 100 # -1 : no clipping
 
 
 
