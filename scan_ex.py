@@ -39,7 +39,7 @@ y = T.concatenate(([z[-1]], x), axis=0)
 
 wx = w * x
 results, updates = theano.scan(fn=step,
-			sequences=[wx, dict(input=y, taps=[-0])],
+			sequences=[wx, y],
 			outputs_info=dict(initial=h, taps=[-1]),
 			non_sequences=[w, v]			
 )
