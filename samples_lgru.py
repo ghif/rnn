@@ -30,7 +30,7 @@ print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 50 # 
-learning_rate = 1e-3
+learning_rate = 5e-3
 batch_size = 20
 lettersize = 40
 clipval = -1 # -1 : no clipping
