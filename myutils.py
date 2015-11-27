@@ -201,7 +201,7 @@ def train_rnn(model, vocabs,
             generated = text_sampling_char(
                 model,vocabs,
                 temperatures, 
-                ns=200)
+                ns=400)
             
             outstr += generated
 

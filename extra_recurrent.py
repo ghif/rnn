@@ -93,13 +93,12 @@ class LGRU(Recurrent):
 		x_z = T.dot(X, self.W_xz) + self.b_z
 		x_o = T.dot(X, self.W_xo) + self.b_o
 
-
 		h_info = T.unbroadcast(alloc_zeros_matrix(X.shape[1], self.output_dim), 1)
 		c_info = T.unbroadcast(alloc_zeros_matrix(X.shape[1], self.output_dim), 1)
 
 		[outputs, cells], updates = theano.scan(
 		    self._step,
-		    sequences=[x_f, x_z, x_o, padded_mask, dict(input=X_tm1, taps=[-0])],
+		    sequences=[x_f, x_z, x_o, padded_mask, X_tm1],
 		    outputs_info=[h_info, c_info],
 		    non_sequences=[self.U_hf, self.U_xz, self.U_xo],
 		    truncate_gradient=self.truncate_gradient,

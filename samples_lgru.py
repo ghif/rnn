@@ -22,9 +22,10 @@ import gzip
 
 
 # Outputs
-outfile = 'results/samples_lgru_out.txt'
-paramsfile = 'models/samples_lgru_weights.pkl.gz'
-configfile = 'models/samples_lgru_config.pkl.gz'
+t = 3 # trial
+outfile = 'results/samples_lgru_out'+str(t)+'.txt'
+paramsfile = 'models/samples_lgru_weights'+str(t)+'.pkl.gz'
+configfile = 'models/samples_lgru_config'+str(t)+'.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
@@ -111,7 +112,7 @@ res = {'config': model.get_config(),
 pickle.dump(res, gzip.open(configfile,'w'))
 
 
-train_rnn(model, vocabs, X, Y, 
+train_res = train_rnn(model, vocabs, X, Y, 
     batch_size=batch_size, iteration=500,
     outfile=outfile, paramsfile=paramsfile
 ) #see myutils.py

@@ -34,7 +34,7 @@ seqlen = 50 #
 learning_rate = 5e-3
 batch_size = 20
 lettersize = 40
-clipval = 5 # -1 : no clipping
+clipval = -1 # -1 : no clipping
 
 
 

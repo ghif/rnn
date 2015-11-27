@@ -112,7 +112,7 @@ res = {'config': model.get_config(),
 pickle.dump(res, gzip.open(configfile,'w'))
 
 
-train_rnn(model, vocabs, X, Y, 
+train_res = train_rnn(model, vocabs, X, Y, 
     batch_size=batch_size, iteration=500,
     outfile=outfile, paramsfile=paramsfile
 ) #see myutils.py
