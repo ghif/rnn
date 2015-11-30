@@ -22,7 +22,7 @@ import gzip
 
 
 # Outputs
-t = 3 # trial
+t = 4 # trial
 outfile = 'results/samples_lgru_out'+str(t)+'.txt'
 paramsfile = 'models/samples_lgru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/samples_lgru_config'+str(t)+'.pkl.gz'
