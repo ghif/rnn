@@ -25,10 +25,10 @@ print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 50 # 
-learning_rate = 8e-3
+learning_rate = 5e-3
 batch_size = 20
 lettersize = 40
-clipval = 5 # -1 : no clipping
+clipval = -1 # -1 : no clipping
 
 # Data I/O
 vocabs = initvocab('data/samples.txt', seqlen)
