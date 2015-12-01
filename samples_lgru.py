@@ -26,7 +26,7 @@ import gzip
 # t = 7, clipval = 15
 # t = 8, clipval = 50
 # t = 9, LGRU2, clipval = -1
-t = 9 # 
+t = 10 # 
 outfile = 'results/samples_lgru_out'+str(t)+'.txt'
 paramsfile = 'models/samples_lgru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/samples_lgru_config'+str(t)+'.pkl.gz'
@@ -37,7 +37,7 @@ seqlen = 50 #
 learning_rate = 5e-3
 batch_size = 20
 lettersize = 40
-clipval = -1
+clipval = 5
 
 
 
@@ -79,30 +79,27 @@ model.add(Embedding(inputsize, lettersize))
 model.add(LGRU2(76, 
     return_sequences=True, 
     inner_activation='sigmoid',
-    activation='tanh',
-    truncate_gradient=clipval
+    activation='tanh'
     )
 )
 # model.add(Dropout(0.2))
 model.add(LGRU2(80, 
     return_sequences=True,
     inner_activation='sigmoid',
-    activation='tanh',
-    truncate_gradient=clipval
+    activation='tanh'
     )
 )
 # # model.add(Dropout(0.2))
 model.add(LGRU2(90, 
     return_sequences=True,
     inner_activation='sigmoid',
-    activation='tanh',
-    truncate_gradient=clipval
+    activation='tanh'
     )
 )
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6)
+opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
 model.compile(loss='categorical_crossentropy', optimizer=opt)
 
 
