@@ -1,3 +1,4 @@
+
 import theano
 import theano.tensor as T
 import numpy as np
@@ -71,7 +72,8 @@ class LGRU(Recurrent):
 
 
 		f_t = self.inner_activation(xf_t + T.dot(h_mask_tm1, U_f))
-		z_t = self.inner_activation(xz_t + T.dot(x_tm1, U_z))
+		# z_t = self.inner_activation(xz_t + T.dot(x_tm1, U_z))
+		z_t = xz_t + T.dot(x_tm1, U_z)
 		o_t = self.activation(xo_t + T.dot(x_tm1, U_o))
 		c_t = f_t * c_mask_tm1 + (1 - f_t) * z_t
 		h_t = c_t * o_t
