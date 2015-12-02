@@ -166,7 +166,14 @@ def text_sampling_char(
 
 def perplexity(Y, P):
     [batch_size, seqlen, _] = Y.shape
-    ppl = (-np.sum(np.multiply(Y, np.log2(P))) /  (seqlen * batch_size)) ** 2
+    logp = np.log2(P)
+
+    # == avoid nan ===
+    pos = np.where(np.isinf(logp) == True)
+    logp[pos] = -200
+    # ======
+
+    ppl = (-np.sum(np.multiply(Y, logp)) /  (seqlen * batch_size)) ** 2
     return ppl
 
 
@@ -178,7 +185,8 @@ def train_rnn(model, vocabs,
     fo.close()
 
     losses = []
-    ppls = []
+    ppl_avgs = []
+    ppl_meds = []
     elapsed_times = []
     
 
@@ -211,9 +219,12 @@ def train_rnn(model, vocabs,
         start_time = time.time()
 
         loss_avg = 0.
+
         ppl = 0. #perplexity
+        ppls = []
 
         n_batches = 0
+        
 
         progbar = generic_utils.Progbar(X.shape[0])
         for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
@@ -227,7 +238,8 @@ def train_rnn(model, vocabs,
 
             # perplexity
             probs = model.predict(X_batch)
-            ppl += perplexity(Y_batch, probs)
+            ppl = perplexity(Y_batch, probs)
+            ppls.append(ppl)
 
 
         elapsed_time = time.time() - start_time
@@ -235,13 +247,18 @@ def train_rnn(model, vocabs,
 
 
         loss_avg = loss_avg / n_batches
-        ppl = ppl / n_batches
 
+
+        ppl_avg = np.average(ppls)
         print ''
-        print '-- (Averaged) Perplexity : ',ppl
-        outstr += '-- (Averaged) Perplexity : %s\n' % ppl
-        ppls.append(ppl)
-        outstr += '-- (Median) Perplexity : %s\n' % np.median(ppls)
+        print '-- (Averaged) Perplexity : ',ppl_avg
+        outstr += '-- (Averaged) Perplexity : %s\n' % ppl_avg
+        ppl_avgs.append(ppl_avg)
+
+        ppl_med = np.median(ppls)
+        print '-- (Median) Perplexity : ',ppl_med
+        outstr += '-- (Median) Perplexity : %s\n' % ppl_med
+        ppl_meds.append(ppl_med)
 
         print '-- (Averaged) train loss : ',loss_avg
         outstr += '-- (Averaged) train loss : %s\n' % loss_avg
@@ -255,7 +272,8 @@ def train_rnn(model, vocabs,
 
         # store the other numerical results
         res = {'losses':losses, 
-                'ppls':ppls,
+                'ppl_avgs':ppl_avgs,
+                'ppl_meds':ppl_meds,
                 'elapsed_times':elapsed_times,
                 'weights': model.get_weights()
         }
