@@ -27,21 +27,21 @@ h = T.scalar("outputs", dtype='float32')
 
 def step(wx_t, x_tm1,
  	h_tm1, 
- 	w, v):
+ 	v):
 	
-	h_t = wx_t + v * h_tm1 + u * x_tm1
+	h_t = wx_t + v * h_tm1
 	return h_t
 
 
 # zero left-padding
 z = T.zeros_like(x)
-y = T.concatenate(([z[-1]], x), axis=0)
+x_tm1 = T.concatenate(([z[-1]], x), axis=0)
 
-wx = w * x
+wx = w * x + u * x_tm1
 results, updates = theano.scan(fn=step,
-			sequences=[wx, y],
+			sequences=[wx, x_tm1],
 			outputs_info=dict(initial=h, taps=[-1]),
-			non_sequences=[w, v]			
+			non_sequences=[v]			
 )
 
 rnn = theano.function(inputs=[x, h, w, v, u], outputs=results)
