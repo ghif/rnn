@@ -22,7 +22,10 @@ import gzip
 
 
 # Outputs
-t = 5 # trial
+# t = 6, clipval = 30
+# t = 7, clipval = 15
+# t = 8, clipval = 50
+t = 8 # trial 
 outfile = 'results/samples_lgru_out'+str(t)+'.txt'
 paramsfile = 'models/samples_lgru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/samples_lgru_config'+str(t)+'.pkl.gz'
@@ -33,7 +36,7 @@ seqlen = 50 #
 learning_rate = 5e-3
 batch_size = 20
 lettersize = 40
-clipval = 30 # -1 : no clipping
+clipval = 50 # -1 : no clipping
 
 
 
