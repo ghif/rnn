@@ -2,7 +2,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
 from keras.layers.recurrent import SimpleRNN, LSTM
 from keras.layers.embeddings import Embedding
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, SGD
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import np_utils, generic_utils
 from keras.regularizers import l2
@@ -18,17 +18,19 @@ import gzip
 
 
 # Outputs
-outfile = 'results/wp_lstm_out.txt'
-paramsfile = 'models/wp_lstm_weights.pkl.gz'
-configfile = 'models/wp_lstm_config.pkl.gz'
+t = 2
+outfile = 'results/wp_lstm_out'+str(t)+'.txt'
+paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
+configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'
 print outfile,' ---- ', paramsfile
+
 
 # hyper-parameters
 seqlen = 100 # 
-learning_rate = 5e-3
+learning_rate = 2e-3
 batch_size = 100
-lettersize = 40
-clipval = 5 # -1 : no clipping
+lettersize = 87
+clipval = 50 # -1 : no clipping
 
 # Data I/O
 vocabs = initvocab('data/warpeace_input.txt', seqlen)
@@ -63,13 +65,13 @@ for i, sent in enumerate(sents):
 print('Build LSTM...')
 model = Sequential()
 model.add(Embedding(inputsize, lettersize))
-model.add(LSTM(512, 
+model.add(LSTM(64, 
     return_sequences=True, 
     truncate_gradient=clipval, 
     input_dim=inputsize)
 )
 # model.add(Dropout(0.2))
-model.add(LSTM(512, 
+model.add(LSTM(64, 
     return_sequences=True, 
     truncate_gradient=clipval)
 )
@@ -77,6 +79,7 @@ model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6)
+# opt = SGD(lr=learning_rate, momentum=0.9, decay=0.95, nesterov=True)
 model.compile(loss='categorical_crossentropy', optimizer=opt)
 
 # Store configuration
@@ -91,6 +94,6 @@ pickle.dump(res, gzip.open(configfile,'w'))
 
 
 train_rnn(model, vocabs, X, Y, 
-    batch_size=batch_size, iteration=500,
+    batch_size=batch_size, iteration=50,
     outfile=outfile, paramsfile=paramsfile
 ) #see myutils.py

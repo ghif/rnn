@@ -10,7 +10,6 @@ from keras.optimizers import RMSprop
 from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
 
-
 import numpy as np
 import sys
 
@@ -19,9 +18,8 @@ from myutils import *
 import cPickle as pickle
 import gzip
 
-
 # Outputs
-t = 1
+t = 2
 outfile = 'results/wp_gru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
@@ -29,27 +27,32 @@ print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 100 # 
-learning_rate = 2e-3
-batch_size = 50
-lettersize = 40
-clipval = 5 # -1 : no clipping
-
-
+learning_rate = 8e-3
+batch_size = 100
+lettersize = 87
+clipval = 50 # -1 : no clipping
 
 # Data I/O
-vocabs = initvocab('data/warpeace_input.txt', seqlen)
+vocabs = initvocab_split('data/warpeace_input.txt', seqlen)
 text = vocabs['text']
 sents = vocabs['sents']
+text_valid = vocabs['text_valid']
+sents_valid = vocabs['sents_valid']
+text_test = vocabs['text_test']
+sents_test = vocabs['sents_test']
+
 vocab = vocabs['vocab']
 char_indices = vocabs['char_indices']
 indices_char = vocabs['indices_char']
 
 inputsize = len(vocab)
 outputsize = inputsize
-n = len(sents)
 
 
 print('Vectorization...')
+
+# Train
+n = len(sents)
 X = np.zeros((n, seqlen), dtype='float32')
 Y = np.zeros((n, seqlen, inputsize), dtype='float32')
 
@@ -57,38 +60,55 @@ for i, sent in enumerate(sents):
     prev_char = '*'
     for t in range(seqlen):
         char = sent[t]
-        # print(prev_char ,' --- ', char)
-        # X[i, t, char_indices[prev_char]] = 1
         X[i, t] = char_indices[prev_char]
         Y[i, t, char_indices[char]] = 1
         prev_char = char
 
-# ############
+# Valid
+n_valid = len(sents_valid)
+X_valid = np.zeros((n_valid, seqlen), dtype='float32')
+Y_valid = np.zeros((n_valid, seqlen, inputsize), dtype='float32')
+for i, sent in enumerate(sents_valid):
+    prev_char = '*'
+    for t in range(seqlen):
+        char = sent[t]
+        X_valid[i, t] = char_indices[prev_char]
+        Y_valid[i, t, char_indices[char]] = 1
+        prev_char = char
 
+
+# Test
+n_test = len(sents_test)
+X_test = np.zeros((n_test, seqlen), dtype='float32')
+Y_test = np.zeros((n_test, seqlen, inputsize), dtype='float32')
+for i, sent in enumerate(sents_test):
+    prev_char = '*'
+    for t in range(seqlen):
+        char = sent[t]
+        X_test[i, t] = char_indices[prev_char]
+        Y_test[i, t, char_indices[char]] = 1
+        prev_char = char
+
+# ############
 print('Build GRU...')
 model = Sequential()
 model.add(Embedding(inputsize, lettersize))
 
-model.add(GRU(160, 
+
+model.add(GRU(100, 
     return_sequences=True, 
     inner_activation='sigmoid',
     activation='tanh'
     )
 )
 # model.add(Dropout(0.2))
-model.add(GRU(170, 
-    return_sequences=True,
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
-# # model.add(Dropout(0.2))
-model.add(GRU(180, 
-    return_sequences=True,
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
+# model.add(GRU(100, 
+#     return_sequences=True,
+#     inner_activation='sigmoid',
+#     activation='tanh'
+#     )
+# )
+# model.add(Dropout(0.2))
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
@@ -107,7 +127,8 @@ res = {'config': model.get_config(),
 pickle.dump(res, gzip.open(configfile,'w'))
 
 
-train_rnn(model, vocabs, X, Y, 
+train_rnn2(model, vocabs, X, Y, 
+    X_valid, Y_valid, X_test, Y_test,
     batch_size=batch_size, iteration=50,
     outfile=outfile, paramsfile=paramsfile
 ) #see myutils.py

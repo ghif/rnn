@@ -75,7 +75,69 @@ def initvocab(datapath, seqlen):
     
     return vocabs
 
+def initvocab_split(datapath, seqlen):
+    text_o = open(datapath, 'r').read()
+    print '[initvocal_split] len(text_o) : ',len(text_o)
 
+    n_train = int(len(text_o) * 0.8)
+    n_valid = int(len(text_o) * 0.1)
+    n_test = int(len(text_o) * 0.1)
+
+    text = text_o[0:n_train]
+    text_valid = text_o[n_train:n_train + n_valid]
+    text_test = text_o[n_train+n_valid: n_train+n_valid+n_test]
+
+    print '[initvocal_split] len(text_valid) : ',len(text_valid)
+    print '[initvocal_split] len(text_test) : ',len(text_test)
+
+    vocab = set(text_o)
+    # vocab.remove('\n')
+    vocab = sorted(vocab)
+    vocab = ['*'] + vocab
+
+    char_indices = dict((c, i) for i, c in enumerate(vocab))
+    indices_char = dict((i, c) for i, c in enumerate(vocab))
+
+    # train
+    sents = []
+    step = 1
+    nsent = len(text) / seqlen
+    for i in range(nsent):
+        i1 = i*seqlen
+        i2 = i*seqlen + seqlen
+        sents.append(text[i1:i2])
+
+    # valid
+    sents_valid = []
+    step = 1
+    nsent = len(text_valid) / seqlen
+    for i in range(nsent):
+        i1 = i*seqlen
+        i2 = i*seqlen + seqlen
+        sents_valid.append(text_valid[i1:i2])
+
+    # test
+    sents_test = []
+    step = 1
+    nsent = len(text_test) / seqlen
+    for i in range(nsent):
+        i1 = i*seqlen
+        i2 = i*seqlen + seqlen
+        sents_test.append(text_test[i1:i2])
+
+    
+
+    vocabs = {'text':text,
+              'text_valid': text_valid,
+              'text_test': text_test,
+              'sents':sents,
+              'sents_valid':sents_valid,
+              'sents_test':sents_test,
+              'vocab':vocab,
+              'char_indices': char_indices,
+              'indices_char':indices_char}
+    
+    return vocabs
 
 def text_sampling_char(
     model,vocabs,templist,
@@ -274,6 +336,165 @@ def train_rnn(model, vocabs,
         res = {'losses':losses, 
                 'ppl_avgs':ppl_avgs,
                 'ppl_meds':ppl_meds,
+                'elapsed_times':elapsed_times,
+                'weights': model.get_weights()
+        }
+        
+        pickle.dump(res, gzip.open(paramsfile,'w'))
+
+    return res
+
+def train_rnn2(model, vocabs,
+    X, Y, X_valid, Y_valid, X_test, Y_test,
+    batch_size=100, iteration=50, 
+    outfile='outfile.txt', paramsfile='paramsfile.pkl.gz'):
+
+    fo = open(outfile,'w')
+    fo.close()
+
+    losses = []
+    ppl_avgs = []
+    ppl_meds = []
+
+    losses_valid = []
+    ppl_valid_avgs = []
+    ppl_valid_meds = []
+
+    losses_test = []
+    ppl_test_avgs = []
+    ppl_test_meds = []
+
+
+    elapsed_times = []
+    
+
+    for itr in range(1, iteration+1):
+        print()
+        outstr = ''
+        print('*' * 50)
+        outstr += '*******\n'
+        
+        print('Iteration', itr)
+        outstr += 'Iteration : %d\n' % (itr)
+
+        
+        print('*' * 50)
+        outstr += '*******\n'
+
+        if itr % 10 == 0:
+            print(' -- Text sampling ---')
+            temperatures = [0.7, 1]
+            generated = text_sampling_char(
+                model,vocabs,
+                temperatures, 
+                ns=400)
+            
+            outstr += generated
+
+
+        print(' == Training ==')
+        
+        start_time = time.time()
+
+        loss_avg = 0.
+
+        ppl = 0. #perplexity
+        ppls = []
+
+        n_batches = 0
+        
+
+        progbar = generic_utils.Progbar(X.shape[0])
+        for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
+            train_score = model.train_on_batch(X_batch, Y_batch)
+            progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
+
+
+            # log loss
+            loss_avg += train_score
+            n_batches += 1
+
+            # perplexity
+            probs = model.predict(X_batch)
+            ppl = perplexity(Y_batch, probs)
+            ppls.append(ppl)
+
+
+        elapsed_time = time.time() - start_time
+        elapsed_times.append(elapsed_time)
+
+
+        loss_avg = loss_avg / n_batches
+
+
+        ppl_avg = np.average(ppls)
+        print ''
+        print '-- (Averaged) Perplexity : ',ppl_avg
+        outstr += '-- (Averaged) Perplexity : %s\n' % ppl_avg
+        ppl_avgs.append(ppl_avg)
+
+        ppl_med = np.median(ppls)
+        print '-- (Median) Perplexity : ',ppl_med
+        outstr += '-- (Median) Perplexity : %s\n' % ppl_med
+        ppl_meds.append(ppl_med)
+
+        print '-- (Averaged) train loss : ',loss_avg
+        outstr += '-- (Averaged) train loss : %s\n' % loss_avg
+        losses.append(loss_avg)
+
+
+        print(' == Validation ==')
+        loss_valid_avg = model.evaluate(X_valid, Y_valid, batch_size=1024)
+        losses_valid.append(loss_valid_avg)
+        probs_valid = model.predict(X_valid)
+        ppls_valid = perplexity(Y_valid, probs_valid)
+        ppl_avg = np.average(ppls_valid)
+        print ''
+        print '-- (Averaged) Validation Perplexity : ',ppl_avg
+        outstr += '-- (Averaged) Validation Perplexity : %s\n' % ppl_avg
+        ppl_valid_avgs.append(ppl_avg)
+
+        ppl_med = np.median(ppls_valid)
+        print '-- (Median) Validation Perplexity : ',ppl_med
+        outstr += '-- (Median) Validation Perplexity : %s\n' % ppl_med
+        ppl_valid_meds.append(ppl_med)
+
+
+
+        print(' == Test ==')
+        loss_test_avg = model.evaluate(X_test, Y_test, batch_size=1024)
+        losses_test.append(loss_test_avg)
+        probs_test = model.predict(X_test)
+        ppls_test = perplexity(Y_test, probs_test)
+
+        ppl_avg = np.average(ppls_test)
+        print ''
+        print '-- (Averaged) Test Perplexity : ',ppl_avg
+        outstr += '-- (Averaged) Test Perplexity : %s\n' % ppl_avg
+        ppl_test_avgs.append(ppl_avg)
+
+        ppl_med = np.median(ppls_test)
+        print '-- (Median) Test Perplexity : ',ppl_med
+        outstr += '-- (Median) Test Perplexity : %s\n' % ppl_med
+        ppl_test_meds.append(ppl_med)
+        
+
+        # store the training progress incl. the generated text
+        fo = open(outfile,'a')
+        fo.write(outstr)    
+        fo.close()
+
+
+        # store the other numerical results
+        res = {'losses':losses,
+                'ppl_avgs':ppl_avgs,
+                'ppl_meds':ppl_meds,
+                'losses_valid':losses_valid,
+                'ppl_valid_avgs':ppl_valid_avgs,
+                'ppl_valid_meds':ppl_valid_meds,
+                'losses_test':losses_test,
+                'ppl_test_avgs':ppl_test_avgs,
+                'ppl_test_meds':ppl_test_meds,
                 'elapsed_times':elapsed_times,
                 'weights': model.get_weights()
         }
