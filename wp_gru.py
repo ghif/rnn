@@ -31,10 +31,10 @@ print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 100 # 
-learning_rate = 7e-3
-batch_size = 128
-lettersize = 40
-clipval = 5 # -1 : no clipping
+learning_rate = 8e-3
+batch_size = 100
+lettersize = 87
+clipval = 50 # -1 : no clipping
 
 
 
@@ -71,27 +71,24 @@ print('Build GRU...')
 model = Sequential()
 model.add(Embedding(inputsize, lettersize))
 
-model.add(GRU(76, 
+model.add(GRU(100, 
     return_sequences=True, 
     inner_activation='sigmoid',
     activation='tanh',
-    truncate_gradient=clipval,
     input_dim=inputsize)
 )
 # model.add(Dropout(0.2))
-model.add(GRU(80, 
+model.add(GRU(100, 
     return_sequences=True,
     inner_activation='sigmoid',
-    activation='tanh',
-    truncate_gradient=clipval
+    activation='tanh'
     )
 )
 # # model.add(Dropout(0.2))
 model.add(GRU(90, 
     return_sequences=True,
     inner_activation='sigmoid',
-    activation='tanh',
-    truncate_gradient=clipval
+    activation='tanh'
     )
 )
 model.add(TimeDistributedDense(outputsize))

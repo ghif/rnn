@@ -1,1 +1,1 @@
-env THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 python -i samples_lgru.py
+env THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 nohup python -i samples_lgru.py > lgru_nohup.out &
