@@ -19,18 +19,18 @@ import cPickle as pickle
 import gzip
 
 # Outputs
-t = 2
+t = 3
 outfile = 'results/wp_gru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
-seqlen = 100 # 
-learning_rate = 8e-3
+seqlen = 150 # 
+learning_rate = 5e-3
 batch_size = 100
 lettersize = 87
-clipval = 50 # -1 : no clipping
+clipval = 5 # -1 : no clipping
 
 # Data I/O
 vocabs = initvocab_split('data/warpeace_input.txt', seqlen)
@@ -95,20 +95,20 @@ model = Sequential()
 model.add(Embedding(inputsize, lettersize))
 
 
-model.add(GRU(100, 
+model.add(GRU(128, 
     return_sequences=True, 
     inner_activation='sigmoid',
     activation='tanh'
     )
 )
 # model.add(Dropout(0.2))
-# model.add(GRU(100, 
-#     return_sequences=True,
-#     inner_activation='sigmoid',
-#     activation='tanh'
-#     )
-# )
-# model.add(Dropout(0.2))
+model.add(GRU(128, 
+    return_sequences=True,
+    inner_activation='sigmoid',
+    activation='tanh'
+    )
+)
+model.add(Dropout(0.3))
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
