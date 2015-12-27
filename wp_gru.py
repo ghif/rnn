@@ -1,8 +1,5 @@
 '''
-    Text generation using GRU on samples.txt
-
-    - Looks good on iteration >= 15
-    - The convergence rate is still much slower than that of Julia
+    Text generation using GRU on War and Peace dataset
 '''
 
 from keras.models import Sequential
@@ -24,9 +21,10 @@ import gzip
 
 
 # Outputs
-outfile = 'results/wp_gru_out.txt'
-paramsfile = 'models/wp_gru_weights.pkl.gz'
-configfile = 'models/wp_gru_config.pkl.gz'
+t = 2
+outfile = 'results/wp_gru_out'+str(t)+'.txt'
+paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
+configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
@@ -35,6 +33,7 @@ learning_rate = 8e-3
 batch_size = 100
 lettersize = 87
 clipval = 50 # -1 : no clipping
+
 
 
 
@@ -71,11 +70,12 @@ print('Build GRU...')
 model = Sequential()
 model.add(Embedding(inputsize, lettersize))
 
+
 model.add(GRU(100, 
     return_sequences=True, 
     inner_activation='sigmoid',
-    activation='tanh',
-    input_dim=inputsize)
+    activation='tanh'
+    )
 )
 # model.add(Dropout(0.2))
 model.add(GRU(100, 
@@ -84,17 +84,11 @@ model.add(GRU(100,
     activation='tanh'
     )
 )
-# # model.add(Dropout(0.2))
-model.add(GRU(90, 
-    return_sequences=True,
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
+model.add(Dropout(0.2))
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6)
+opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
 model.compile(loss='categorical_crossentropy', optimizer=opt)
 
 
@@ -110,6 +104,6 @@ pickle.dump(res, gzip.open(configfile,'w'))
 
 
 train_rnn(model, vocabs, X, Y, 
-    batch_size=batch_size, iteration=500,
+    batch_size=batch_size, iteration=50,
     outfile=outfile, paramsfile=paramsfile
 ) #see myutils.py

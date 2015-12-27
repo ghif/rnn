@@ -7,10 +7,9 @@
 
 from keras.models import Sequential
 from keras.layers.core import TimeDistributedDense, Dropout, Activation
-from extra_recurrent import LGRU
+from extra_recurrent import LGRU, LGRU_FF
 from keras.layers.embeddings import Embedding
 from keras.optimizers import RMSprop
-
 
 
 import numpy as np
@@ -23,18 +22,18 @@ import gzip
 
 
 # Outputs
-t = 4 # trial
+t = 3 
 outfile = 'results/wp_lgru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_lgru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_lgru_config'+str(t)+'.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
-seqlen = 100 # 
-learning_rate = 1e-3
-batch_size = 100
+seqlen = 128 # 
+learning_rate = 7e-3
+batch_size = 40
 lettersize = 40
-clipval = 100 # -1 : no clipping
+clipval = 30 # -1 : no clipping
 
 
 
@@ -67,37 +66,37 @@ for i, sent in enumerate(sents):
 
 # ############
 
-print('Build LGRU...')
+print('Build LGRU_FF...')
 model = Sequential()
 model.add(Embedding(inputsize, lettersize))
+# 402888
 
-model.add(LGRU(76, 
+model.add(LGRU_FF(160, 
     return_sequences=True, 
     inner_activation='sigmoid',
-    activation='tanh',
-    truncate_gradient=clipval,
-    input_dim=inputsize)
+    activation='tanh'
+    )
 )
 # model.add(Dropout(0.2))
-model.add(LGRU(80, 
+model.add(LGRU_FF(170, 
     return_sequences=True,
     inner_activation='sigmoid',
-    activation='tanh',
-    truncate_gradient=clipval
+    activation='tanh'
     )
 )
 # # model.add(Dropout(0.2))
-model.add(LGRU(90, 
+model.add(LGRU_FF(180, 
     return_sequences=True,
     inner_activation='sigmoid',
-    activation='tanh',
-    truncate_gradient=clipval
+    activation='tanh'
     )
 )
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6)
+# print 'Parameters: ', model.n_param
+
+opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
 model.compile(loss='categorical_crossentropy', optimizer=opt)
 
 

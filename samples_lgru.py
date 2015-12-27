@@ -26,7 +26,8 @@ import gzip
 # t = 7, clipval = 15
 # t = 8, clipval = 50
 # t = 9, LGRU2, clipval = -1
-t = 10 # 
+# t = 11, perplexity modified, clipval modified
+t = 11 # 
 outfile = 'results/samples_lgru_out'+str(t)+'.txt'
 paramsfile = 'models/samples_lgru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/samples_lgru_config'+str(t)+'.pkl.gz'
