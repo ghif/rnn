@@ -19,16 +19,16 @@ import cPickle as pickle
 import gzip
 
 # Outputs
-t = 3
+t = 5
 outfile = 'results/wp_gru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
-seqlen = 150 # 
-learning_rate = 5e-3
-batch_size = 100
+seqlen = 100 # 
+learning_rate = 9e-3
+batch_size = 32
 lettersize = 87
 clipval = 5 # -1 : no clipping
 
