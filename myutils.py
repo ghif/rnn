@@ -432,6 +432,7 @@ def train_rnn2(model, vocabs,
         start_time = time.time()
 
         loss_avg = 0.
+        loss_list = []
 
         ppl = 0. #perplexity
         ppls = []
@@ -446,7 +447,9 @@ def train_rnn2(model, vocabs,
 
 
             # log loss
-            loss_avg += train_score
+            # loss_avg += train_score
+            loss_list.append(train_score)
+
             n_batches += 1
 
             # perplexity
@@ -459,11 +462,14 @@ def train_rnn2(model, vocabs,
         elapsed_times.append(elapsed_time)
 
 
-        loss_avg = loss_avg / n_batches
-
-
-        ppl_avg = np.average(ppls)
+        # loss_avg = loss_avg / n_batches
         print ''
+        loss_avg = np.average(loss_list)
+        print '-- (Averaged) train loss : ',loss_avg
+        outstr += '-- (Averaged) train loss : %s\n' % loss_avg
+        losses.append(loss_avg)
+
+        ppl_avg = np.average(ppls)        
         print '-- (Averaged) Perplexity : ',ppl_avg
         outstr += '-- (Averaged) Perplexity : %s\n' % ppl_avg
         ppl_avgs.append(ppl_avg)
@@ -473,21 +479,24 @@ def train_rnn2(model, vocabs,
         outstr += '-- (Median) Perplexity : %s\n' % ppl_med
         ppl_meds.append(ppl_med)
 
-        print '-- (Averaged) train loss : ',loss_avg
-        outstr += '-- (Averaged) train loss : %s\n' % loss_avg
-        losses.append(loss_avg)
+        
 
 
-        print(' == Validation ==')
+        print(' == VALIDATION ==')
+
         loss_valid_avg = model.evaluate(X_valid, Y_valid, batch_size=1024)
+        print '-- (Averaged) Valid loss : ',loss_valid_avg
+        outstr += '-- (Averaged) Valid loss : %s\n' % loss_valid_avg
         losses_valid.append(loss_valid_avg)
+        
         probs_valid = model.predict(X_valid)
         ppls_valid = perplexity(Y_valid, probs_valid)
         ppl_avg = np.average(ppls_valid)
-        print ''
+        
         print '-- (Averaged) Validation Perplexity : ',ppl_avg
         outstr += '-- (Averaged) Validation Perplexity : %s\n' % ppl_avg
         ppl_valid_avgs.append(ppl_avg)
+        
 
         ppl_med = np.median(ppls_valid)
         print '-- (Median) Validation Perplexity : ',ppl_med
@@ -496,14 +505,18 @@ def train_rnn2(model, vocabs,
 
 
 
-        print(' == Test ==')
+        print(' == TEST ==')
         loss_test_avg = model.evaluate(X_test, Y_test, batch_size=1024)
+        print '-- (Averaged) Test loss : ',loss_test_avg
+        outstr += '-- (Averaged) Test loss : %s\n' % loss_test_avg
         losses_test.append(loss_test_avg)
+
+
+
         probs_test = model.predict(X_test)
         ppls_test = perplexity(Y_test, probs_test)
 
         ppl_avg = np.average(ppls_test)
-        print ''
         print '-- (Averaged) Test Perplexity : ',ppl_avg
         outstr += '-- (Averaged) Test Perplexity : %s\n' % ppl_avg
         ppl_test_avgs.append(ppl_avg)

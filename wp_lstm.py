@@ -18,7 +18,7 @@ import gzip
 
 
 # Outputs
-t = 3
+t = 7
 outfile = 'results/wp_lstm_out'+str(t)+'.txt'
 paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'
@@ -52,7 +52,7 @@ model.add(LSTM(64,
     return_sequences=True,
     input_dim=inputsize)
 )
-# # model.add(Dropout(0.2))
+# model.add(Dropout(0.4))
 # model.add(LSTM(64, 
 #     return_sequences=True
 #     )

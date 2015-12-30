@@ -22,7 +22,7 @@ import gzip
 # t = 6 the best configuration so far
 # t = 7 #same with 6, but with dropout
 # t = 8 # remove the embedding layer
-t = 9 #adam
+t = 9 
 outfile = 'results/wp_gru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
@@ -51,7 +51,7 @@ model = Sequential()
 # model.add(Embedding(inputsize, lettersize))
 
 
-model.add(GRU(64, 
+model.add(GRU(100, 
     return_sequences=True, 
     inner_activation='sigmoid',
     activation='tanh',
