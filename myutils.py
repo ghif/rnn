@@ -75,13 +75,14 @@ def initvocab(datapath, seqlen):
     
     return vocabs
 
-def initvocab_split(datapath, seqlen):
+def initvocab_split(datapath, seqlen, valid_frac=0.1, test_frac=0.1):
     text_o = open(datapath, 'r').read()
     print '[initvocal_split] len(text_o) : ',len(text_o)
 
-    n_train = int(len(text_o) * 0.8)
-    n_valid = int(len(text_o) * 0.1)
-    n_test = int(len(text_o) * 0.1)
+    train_frac = 1. - (valid_frac + test_frac)
+    n_train = int(len(text_o) * train_frac)
+    n_valid = int(len(text_o) * valid_frac)
+    n_test = int(len(text_o) * test_frac)
 
     text = text_o[0:n_train]
     text_valid = text_o[n_train:n_train + n_valid]
@@ -139,6 +140,36 @@ def initvocab_split(datapath, seqlen):
     
     return vocabs
 
+def vectorize(vocabs, seqlen):
+    sents = vocabs['sents']
+    sents_valid = vocabs['sents_valid']
+    sents_test = vocabs['sents_test']
+
+    vocab = vocabs['vocab']
+    char_indices = vocabs['char_indices']
+
+    inputsize = len(vocab)
+
+    def to_onehot(sents, seqlen, inputsize):
+
+        n = len(sents)
+        X = np.zeros((n, seqlen, inputsize), dtype='float32')
+        Y = np.zeros((n, seqlen, inputsize), dtype='float32')
+
+        for i, sent in enumerate(sents):
+            prev_char = '*'
+            for t in range(seqlen):
+                char = sent[t]
+                X[i, t, char_indices[prev_char]] = 1
+                Y[i, t, char_indices[prev_char]] = 1
+                prev_char = char
+        return X, Y
+
+    X_train, Y_train = to_onehot(sents, seqlen, inputsize)
+    X_valid, Y_valid = to_onehot(sents_valid, seqlen, inputsize)
+    X_test, Y_test = to_onehot(sents_test, seqlen, inputsize)
+    return X_train, Y_train, X_valid, Y_valid, X_test, Y_test
+
 def text_sampling_char(
     model,vocabs,templist,
     char='',ns=200):
@@ -175,16 +206,17 @@ def text_sampling_char(
         generated = ''
 
         #### temperature ########
-        # sentences = np.zeros((1, ns, inputsize))
-        # sentences[0, 0, char_indices[char]] = 1
-        sentences = np.zeros((1, ns))
-        sentences[0, 0] = char_indices[char]
+        sentences = np.zeros((1, ns, inputsize))
+        sentences[0, 0, char_indices[char]] = 1
+        # sentences = np.zeros((1, ns))
+        # sentences[0, 0] = char_indices[char]
         
         for i in range(ns-1):
             y = model.predict(sentences, verbose=0)[0,i,:]            
             next_idx = sample(y, temperature)
             
-            sentences[0, i+1] = next_idx
+            sentences[0, i+1, next_idx] = 1
+            # sentences[0, i+1] = next_idx
             next_char = indices_char[next_idx]            
             generated += next_char
 
@@ -205,14 +237,17 @@ def text_sampling_char(
 
     generated = ''
 
-    sentences = np.zeros((1, ns))
-    sentences[0, 0] = char_indices[char]
+    sentences = np.zeros((1, ns, inputsize))
+    sentences[0, 0, char_indices[char]] = 1
+    # sentences = np.zeros((1, ns))
+    # sentences[0, 0] = char_indices[char]
     
     for i in range(ns-1):
         y = model.predict(sentences, verbose=0)[0,i,:]            
         next_idx = np.argmax(y)
         
-        sentences[0, i+1] = next_idx
+        sentences[0, i+1, next_idx] = 1
+        # sentences[0, i+1] = next_idx
         next_char = indices_char[next_idx]            
         generated += next_char
 
@@ -381,15 +416,15 @@ def train_rnn2(model, vocabs,
         print('*' * 50)
         outstr += '*******\n'
 
-        if itr % 10 == 0:
-            print(' -- Text sampling ---')
-            temperatures = [0.7, 1]
-            generated = text_sampling_char(
-                model,vocabs,
-                temperatures, 
-                ns=400)
-            
-            outstr += generated
+        # if itr % 10 == 0:
+        print(' -- Text sampling ---')
+        temperatures = [0.7, 1]
+        generated = text_sampling_char(
+            model,vocabs,
+            temperatures, 
+            ns=400)
+        
+        outstr += generated
 
 
         print(' == Training ==')

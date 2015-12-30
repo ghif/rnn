@@ -19,7 +19,9 @@ import cPickle as pickle
 import gzip
 
 # Outputs
-t = 5
+# t = 6 the best configuration so far
+# t = 7 #same with 6, but with dropout
+t = 8 # remove the embedding layer
 outfile = 'results/wp_gru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
@@ -27,88 +29,42 @@ print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 100 # 
-learning_rate = 9e-3
-batch_size = 32
-lettersize = 87
+learning_rate = 2e-3
+batch_size = 100
+# lettersize = 87
 clipval = 5 # -1 : no clipping
 
 # Data I/O
 vocabs = initvocab_split('data/warpeace_input.txt', seqlen)
-text = vocabs['text']
-sents = vocabs['sents']
-text_valid = vocabs['text_valid']
-sents_valid = vocabs['sents_valid']
-text_test = vocabs['text_test']
-sents_test = vocabs['sents_test']
 
 vocab = vocabs['vocab']
-char_indices = vocabs['char_indices']
-indices_char = vocabs['indices_char']
-
 inputsize = len(vocab)
 outputsize = inputsize
 
-
 print('Vectorization...')
-
-# Train
-n = len(sents)
-X = np.zeros((n, seqlen), dtype='float32')
-Y = np.zeros((n, seqlen, inputsize), dtype='float32')
-
-for i, sent in enumerate(sents):
-    prev_char = '*'
-    for t in range(seqlen):
-        char = sent[t]
-        X[i, t] = char_indices[prev_char]
-        Y[i, t, char_indices[char]] = 1
-        prev_char = char
-
-# Valid
-n_valid = len(sents_valid)
-X_valid = np.zeros((n_valid, seqlen), dtype='float32')
-Y_valid = np.zeros((n_valid, seqlen, inputsize), dtype='float32')
-for i, sent in enumerate(sents_valid):
-    prev_char = '*'
-    for t in range(seqlen):
-        char = sent[t]
-        X_valid[i, t] = char_indices[prev_char]
-        Y_valid[i, t, char_indices[char]] = 1
-        prev_char = char
-
-
-# Test
-n_test = len(sents_test)
-X_test = np.zeros((n_test, seqlen), dtype='float32')
-Y_test = np.zeros((n_test, seqlen, inputsize), dtype='float32')
-for i, sent in enumerate(sents_test):
-    prev_char = '*'
-    for t in range(seqlen):
-        char = sent[t]
-        X_test[i, t] = char_indices[prev_char]
-        Y_test[i, t, char_indices[char]] = 1
-        prev_char = char
+X, Y, X_valid, Y_valid, X_test, Y_test = vectorize(vocabs, seqlen)
 
 # ############
 print('Build GRU...')
 model = Sequential()
-model.add(Embedding(inputsize, lettersize))
+# model.add(Embedding(inputsize, lettersize))
 
 
-model.add(GRU(128, 
+model.add(GRU(256, 
     return_sequences=True, 
     inner_activation='sigmoid',
-    activation='tanh'
+    activation='tanh',
+    input_dim=inputsize
     )
 )
-# model.add(Dropout(0.2))
-model.add(GRU(128, 
+# model.add(Dropout(0.4))
+model.add(GRU(256, 
     return_sequences=True,
     inner_activation='sigmoid',
     activation='tanh'
     )
 )
-model.add(Dropout(0.3))
+# model.add(Dropout(0.4))
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
@@ -121,7 +77,7 @@ res = {'config': model.get_config(),
     'seqlen':seqlen,
     'learning_rate':learning_rate,
     'batch_size':batch_size,
-    'lettersize':lettersize,
+    'lettersize':inputsize,
     'clipval':clipval
 }
 pickle.dump(res, gzip.open(configfile,'w'))
