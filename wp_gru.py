@@ -6,7 +6,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
 from keras.layers.recurrent import GRU
 from keras.layers.embeddings import Embedding
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
 
@@ -21,7 +21,8 @@ import gzip
 # Outputs
 # t = 6 the best configuration so far
 # t = 7 #same with 6, but with dropout
-t = 8 # remove the embedding layer
+# t = 8 # remove the embedding layer
+t = 9 #adam
 outfile = 'results/wp_gru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
@@ -29,8 +30,8 @@ print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 100 # 
-learning_rate = 2e-3
-batch_size = 100
+learning_rate = 7e-3
+batch_size = 32
 # lettersize = 87
 clipval = 5 # -1 : no clipping
 
@@ -50,7 +51,7 @@ model = Sequential()
 # model.add(Embedding(inputsize, lettersize))
 
 
-model.add(GRU(256, 
+model.add(GRU(64, 
     return_sequences=True, 
     inner_activation='sigmoid',
     activation='tanh',
@@ -58,12 +59,12 @@ model.add(GRU(256,
     )
 )
 # model.add(Dropout(0.4))
-model.add(GRU(256, 
-    return_sequences=True,
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
+# model.add(GRU(64, 
+#     return_sequences=True,
+#     inner_activation='sigmoid',
+#     activation='tanh'
+#     )
+# )
 # model.add(Dropout(0.4))
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))

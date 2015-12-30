@@ -161,7 +161,7 @@ def vectorize(vocabs, seqlen):
             for t in range(seqlen):
                 char = sent[t]
                 X[i, t, char_indices[prev_char]] = 1
-                Y[i, t, char_indices[prev_char]] = 1
+                Y[i, t, char_indices[char]] = 1
                 prev_char = char
         return X, Y
 
@@ -416,15 +416,15 @@ def train_rnn2(model, vocabs,
         print('*' * 50)
         outstr += '*******\n'
 
-        # if itr % 10 == 0:
-        print(' -- Text sampling ---')
-        temperatures = [0.7, 1]
-        generated = text_sampling_char(
-            model,vocabs,
-            temperatures, 
-            ns=400)
-        
-        outstr += generated
+        if itr % 10 == 0:
+            print(' -- Text sampling ---')
+            temperatures = [0.7, 1]
+            generated = text_sampling_char(
+                model,vocabs,
+                temperatures, 
+                ns=400)
+            
+            outstr += generated
 
 
         print(' == Training ==')
