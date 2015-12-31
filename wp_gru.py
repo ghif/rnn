@@ -25,11 +25,15 @@ import gzip
 # t = 8 # remove the embedding layer
 # t = 9 
 # t = 10 # with roughly the same parameter as LSTM
-t = 11 # uniform initialization [-0.08, 0.08]
+# t = 11 # uniform initialization [-0.08, 0.08]
 
-outfile = 'results/wp_gru_out'+str(t)+'.txt'
-paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
-configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
+# outfile = 'results/wp_gru_out'+str(t)+'.txt'
+# paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
+# configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
+
+outfile = 'results/wp_gru_out_2layer64.txt'
+paramsfile = 'models/wp_gru_weights_2layer64.pkl.gz'
+configfile = 'models/wp_gru_config_2layer64.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
@@ -55,21 +59,22 @@ model = Sequential()
 # model.add(Embedding(inputsize, lettersize))
 
 
-model.add(GRU(77, 
+model.add(GRU(76, 
     return_sequences=True, 
+    init='uniform',
     inner_activation='sigmoid',
     activation='tanh',
-    input_dim=inputsize,
-    init='uniform'
+    input_dim=inputsize
     )
 )
 # model.add(Dropout(0.4))
-# model.add(GRU(64, 
-#     return_sequences=True,
-#     inner_activation='sigmoid',
-#     activation='tanh'
-#     )
-# )
+model.add(GRU(75, 
+    return_sequences=True, 
+    init='uniform',
+    inner_activation='sigmoid',
+    activation='tanh'
+    )
+)
 # model.add(Dropout(0.4))
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))

@@ -19,18 +19,21 @@ import gzip
 
 # Outputs
 # t = 6 cross-entropy loss: ~1.5
-t = 7 # the current best for L1 = 64
-outfile = 'results/wp_lstm_out'+str(t)+'.txt'
-paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
-configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'
+# t = 7 # the current best for L1 = 64
+# outfile = 'results/wp_lstm_out'+str(t)+'.txt'
+# paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
+# configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'
+
+outfile = 'results/wp_lstm_out_2layer64.txt'
+paramsfile = 'models/wp_lstm_weights_2layer64.pkl.gz'
+configfile = 'models/wp_lstm_config_2layer64.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 
 # hyper-parameters
 seqlen = 100 # 
-learning_rate = 7e-3
-batch_size = 32
-# lettersize = 87
+learning_rate = 6e-3
+batch_size = 50
 clipval = 5 # -1 : no clipping
 
 # Data I/O
@@ -50,14 +53,16 @@ print('Build LSTM...')
 model = Sequential()
 # model.add(Embedding(inputsize, lettersize))
 model.add(LSTM(64, 
+    init='uniform',
     return_sequences=True,
     input_dim=inputsize)
 )
 # model.add(Dropout(0.4))
-# model.add(LSTM(64, 
-#     return_sequences=True
-#     )
-# )
+model.add(LSTM(64, 
+    init='uniform',
+    return_sequences=True
+    )
+)
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 

@@ -1,2 +1,2 @@
-env THEANO_FLAGS=mode=FAST_RUN,device=gpu1,floatX=float32 nohup python -i wp_lstm.py > wp_lstm_nohup7.out & 
+env THEANO_FLAGS=mode=FAST_RUN,device=gpu1,floatX=float32 nohup python -i wp_lstm.py > wp_lstm_nohup_2layer64.out & 
 # env THEANO_FLAGS=mode=FAST_RUN,device=gpu1,floatX=float32 python -i wp_lstm.py

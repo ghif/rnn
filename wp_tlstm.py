@@ -23,13 +23,13 @@ import gzip
 
 # Outputs
 # t = 3 good, but slow (up to 500 iterations)
-# t = 4
-# outfile = 'results/wp_lgru_out'+str(t)+'.txt'
-# paramsfile = 'models/wp_lgru_weights'+str(t)+'.pkl.gz'
-# configfile = 'models/wp_lgru_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_lgru_out_2layer64.txt'
-paramsfile = 'models/wp_lgru_weights_2layer64.pkl.gz'
-configfile = 'models/wp_lgru_config_2layer64.pkl.gz'
+# t = 1
+# outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
+# paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
+# configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
+outfile = 'results/wp_tlstm_out_2layer64.txt'
+paramsfile = 'models/wp_tlstm_weights_2layer64.pkl.gz'
+configfile = 'models/wp_tlstm_config_2layer64.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -45,8 +45,6 @@ learning_rate = 6e-3
 batch_size = 50
 clipval = 5 # -1 : no clipping
 
-
-
 # Data I/O
 vocabs = initvocab_split('data/warpeace_input.txt', seqlen)
 
@@ -59,11 +57,11 @@ X, Y, X_valid, Y_valid, X_test, Y_test = vectorize(vocabs, seqlen)
 
 # ############
 
-print('Build LGRU...')
+print('Build T-LSTM...')
 model = Sequential()
 # 402888
 
-model.add(LGRU(75, 
+model.add(LGRU_FF(73, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -72,7 +70,7 @@ model.add(LGRU(75,
     )
 )
 # model.add(Dropout(0.2))
-model.add(LGRU(74, 
+model.add(LGRU_FF(74, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
