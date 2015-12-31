@@ -9,6 +9,7 @@ from keras.layers.embeddings import Embedding
 from keras.optimizers import RMSprop, Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.regularizers import l2
+# from keras.initializations import uniform
 
 import numpy as np
 import sys
@@ -22,7 +23,10 @@ import gzip
 # t = 6 the best configuration so far
 # t = 7 #same with 6, but with dropout
 # t = 8 # remove the embedding layer
-t = 9 
+# t = 9 
+# t = 10 # with roughly the same parameter as LSTM
+t = 11 # uniform initialization [-0.08, 0.08]
+
 outfile = 'results/wp_gru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
@@ -30,8 +34,8 @@ print outfile,' ---- ', paramsfile
 
 # hyper-parameters
 seqlen = 100 # 
-learning_rate = 7e-3
-batch_size = 32
+learning_rate = 6e-3
+batch_size = 50
 # lettersize = 87
 clipval = 5 # -1 : no clipping
 
@@ -51,11 +55,12 @@ model = Sequential()
 # model.add(Embedding(inputsize, lettersize))
 
 
-model.add(GRU(100, 
+model.add(GRU(77, 
     return_sequences=True, 
     inner_activation='sigmoid',
     activation='tanh',
-    input_dim=inputsize
+    input_dim=inputsize,
+    init='uniform'
     )
 )
 # model.add(Dropout(0.4))

@@ -18,7 +18,8 @@ import gzip
 
 
 # Outputs
-t = 7
+# t = 6 cross-entropy loss: ~1.5
+t = 7 # the current best for L1 = 64
 outfile = 'results/wp_lstm_out'+str(t)+'.txt'
 paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'

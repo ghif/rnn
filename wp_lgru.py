@@ -22,75 +22,66 @@ import gzip
 
 
 # Outputs
-t = 3 
+# t = 3 good, but slow (up to 500 iterations)
+t = 4
 outfile = 'results/wp_lgru_out'+str(t)+'.txt'
 paramsfile = 'models/wp_lgru_weights'+str(t)+'.pkl.gz'
 configfile = 'models/wp_lgru_config'+str(t)+'.pkl.gz'
 print outfile,' ---- ', paramsfile
 
+# t = 3
 # hyper-parameters
-seqlen = 128 # 
-learning_rate = 7e-3
-batch_size = 40
-lettersize = 40
-clipval = 30 # -1 : no clipping
+# seqlen = 128 # 
+# learning_rate = 7e-3
+# batch_size = 40
+# lettersize = 40
+# clipval = 30 # -1 : no clipping
+
+seqlen = 100 # 
+learning_rate = 6e-3
+batch_size = 50
+clipval = 5 # -1 : no clipping
 
 
 
 # Data I/O
-vocabs = initvocab('data/warpeace_input.txt', seqlen)
-text = vocabs['text']
-sents = vocabs['sents']
-vocab = vocabs['vocab']
-char_indices = vocabs['char_indices']
-indices_char = vocabs['indices_char']
+vocabs = initvocab_split('data/warpeace_input.txt', seqlen)
 
+vocab = vocabs['vocab']
 inputsize = len(vocab)
 outputsize = inputsize
-n = len(sents)
-
 
 print('Vectorization...')
-X = np.zeros((n, seqlen), dtype='float32')
-Y = np.zeros((n, seqlen, inputsize), dtype='float32')
-
-for i, sent in enumerate(sents):
-    prev_char = '*'
-    for t in range(seqlen):
-        char = sent[t]
-        # print(prev_char ,' --- ', char)
-        # X[i, t, char_indices[prev_char]] = 1
-        X[i, t] = char_indices[prev_char]
-        Y[i, t, char_indices[char]] = 1
-        prev_char = char
+X, Y, X_valid, Y_valid, X_test, Y_test = vectorize(vocabs, seqlen)
 
 # ############
 
-print('Build LGRU_FF...')
+print('Build LGRU...')
 model = Sequential()
-model.add(Embedding(inputsize, lettersize))
 # 402888
 
-model.add(LGRU_FF(160, 
+model.add(LGRU(75, 
     return_sequences=True, 
+    init='uniform',
     inner_activation='sigmoid',
-    activation='tanh'
+    activation='tanh',
+    input_dim=inputsize
     )
 )
 # model.add(Dropout(0.2))
-model.add(LGRU_FF(170, 
-    return_sequences=True,
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
-# # model.add(Dropout(0.2))
-model.add(LGRU_FF(180, 
-    return_sequences=True,
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
+# model.add(LGRU_FF(170, 
+#     return_sequences=True,
+#     inner_activation='sigmoid',
+#     activation='tanh'
+#     )
+# )
+# # # model.add(Dropout(0.2))
+# model.add(LGRU_FF(180, 
+#     return_sequences=True,
+#     inner_activation='sigmoid',
+#     activation='tanh'
+#     )
+# )
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
@@ -105,13 +96,13 @@ res = {'config': model.get_config(),
     'seqlen':seqlen,
     'learning_rate':learning_rate,
     'batch_size':batch_size,
-    'lettersize':lettersize,
+    'lettersize':inputsize,
     'clipval':clipval
 }
 pickle.dump(res, gzip.open(configfile,'w'))
 
-
-train_res = train_rnn(model, vocabs, X, Y, 
-    batch_size=batch_size, iteration=500,
+train_rnn2(model, vocabs, X, Y, 
+    X_valid, Y_valid, X_test, Y_test,
+    batch_size=batch_size, iteration=50,
     outfile=outfile, paramsfile=paramsfile
 ) #see myutils.py
