@@ -27,9 +27,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tlstm_out_2layer64.txt'
-paramsfile = 'models/wp_tlstm_weights_2layer64.pkl.gz'
-configfile = 'models/wp_tlstm_config_2layer64.pkl.gz'
+outfile = 'results/wp_tlstm_out_3layer64.txt'
+paramsfile = 'models/wp_tlstm_weights_3layer64.pkl.gz'
+configfile = 'models/wp_tlstm_config_3layer64.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -78,12 +78,13 @@ model.add(LGRU_FF(74,
     )
 )
 # # # model.add(Dropout(0.2))
-# model.add(LGRU_FF(180, 
-#     return_sequences=True,
-#     inner_activation='sigmoid',
-#     activation='tanh'
-#     )
-# )
+model.add(LGRU_FF(75, 
+    return_sequences=True, 
+    init='uniform',
+    inner_activation='sigmoid',
+    activation='tanh'
+    )
+)
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 

@@ -27,9 +27,9 @@ import gzip
 # outfile = 'results/wp_lgru_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_lgru_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_lgru_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_lgru_out_2layer64.txt'
-paramsfile = 'models/wp_lgru_weights_2layer64.pkl.gz'
-configfile = 'models/wp_lgru_config_2layer64.pkl.gz'
+outfile = 'results/wp_lgru_out_3layer64.txt'
+paramsfile = 'models/wp_lgru_weights_3layer64.pkl.gz'
+configfile = 'models/wp_lgru_config_3layer64.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -73,6 +73,14 @@ model.add(LGRU(75,
 )
 # model.add(Dropout(0.2))
 model.add(LGRU(74, 
+    return_sequences=True, 
+    init='uniform',
+    inner_activation='sigmoid',
+    activation='tanh'
+    )
+)
+
+model.add(LGRU(73, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',

@@ -24,9 +24,9 @@ import gzip
 # paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'
 
-outfile = 'results/wp_lstm_out_2layer64.txt'
-paramsfile = 'models/wp_lstm_weights_2layer64.pkl.gz'
-configfile = 'models/wp_lstm_config_2layer64.pkl.gz'
+outfile = 'results/wp_lstm_out_3layer64.txt'
+paramsfile = 'models/wp_lstm_weights_3layer64.pkl.gz'
+configfile = 'models/wp_lstm_config_3layer64.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 
@@ -63,6 +63,12 @@ model.add(LSTM(64,
     return_sequences=True
     )
 )
+model.add(LSTM(64, 
+    init='uniform',
+    return_sequences=True
+    )
+)
+
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
