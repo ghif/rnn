@@ -1,10 +1,3 @@
-'''
-    Text generation using GRU on samples.txt
-
-    - Looks good on iteration >= 15
-    - The convergence rate is still much slower than that of Julia
-'''
-
 from keras.models import Sequential
 from keras.layers.core import TimeDistributedDense, Dropout, Activation
 from extra_recurrent import LGRU, LGRU_FF
@@ -27,9 +20,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tlstm_out_3layer64.txt'
-paramsfile = 'models/wp_tlstm_weights_3layer64.pkl.gz'
-configfile = 'models/wp_tlstm_config_3layer64.pkl.gz'
+outfile = 'results/wp_tlstm_out_3layer128.txt'
+paramsfile = 'models/wp_tlstm_weights_3layer128.pkl.gz'
+configfile = 'models/wp_tlstm_config_3layer128.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -61,7 +54,7 @@ print('Build T-LSTM...')
 model = Sequential()
 # 402888
 
-model.add(LGRU_FF(73, 
+model.add(LGRU_FF(209, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -70,7 +63,7 @@ model.add(LGRU_FF(73,
     )
 )
 # model.add(Dropout(0.2))
-model.add(LGRU_FF(74, 
+model.add(LGRU_FF(105, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -78,7 +71,7 @@ model.add(LGRU_FF(74,
     )
 )
 # # # model.add(Dropout(0.2))
-model.add(LGRU_FF(75, 
+model.add(LGRU_FF(205, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',

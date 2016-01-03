@@ -31,9 +31,9 @@ import gzip
 # paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
 
-outfile = 'results/wp_gru_out_3layer64.txt'
-paramsfile = 'models/wp_gru_weights_3layer64.pkl.gz'
-configfile = 'models/wp_gru_config_3layer64.pkl.gz'
+outfile = 'results/wp_gru_out_3layer128.txt'
+paramsfile = 'models/wp_gru_weights_3layer128.pkl.gz'
+configfile = 'models/wp_gru_config_3layer128.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
@@ -59,7 +59,7 @@ model = Sequential()
 # model.add(Embedding(inputsize, lettersize))
 
 
-model.add(GRU(76, 
+model.add(GRU(152, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -68,7 +68,7 @@ model.add(GRU(76,
     )
 )
 # model.add(Dropout(0.4))
-model.add(GRU(75, 
+model.add(GRU(147, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -76,7 +76,7 @@ model.add(GRU(75,
     )
 )
 
-model.add(GRU(74, 
+model.add(GRU(148, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
