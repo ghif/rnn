@@ -24,9 +24,9 @@ import gzip
 # paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'
 
-outfile = 'results/wp_lstm_out_1layer256.txt'
-paramsfile = 'models/wp_lstm_weights_1layer256.pkl.gz'
-configfile = 'models/wp_lstm_config_1layer256.pkl.gz'
+outfile = 'results/wp_lstm_out_2layer256.txt'
+paramsfile = 'models/wp_lstm_weights_2layer256.pkl.gz'
+configfile = 'models/wp_lstm_config_2layer256.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 
@@ -57,12 +57,13 @@ model.add(LSTM(256,
     return_sequences=True,
     input_dim=inputsize)
 )
-# model.add(Dropout(0.4))
-# model.add(LSTM(256, 
-#     init='uniform',
-#     return_sequences=True
-#     )
-# )
+model.add(Dropout(0.5))
+model.add(LSTM(256, 
+    init='uniform',
+    return_sequences=True
+    )
+)
+model.add(Dropout(0.5))
 # model.add(LSTM(256, 
 #     init='uniform',
 #     return_sequences=True
