@@ -81,7 +81,7 @@ model.add(TGRU(205,
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-# print 'Parameters: ', model.n_param
+print 'Parameters: ', model.n_param
 
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
 model.compile(loss='categorical_crossentropy', optimizer=opt)

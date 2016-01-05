@@ -20,9 +20,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tlstm_out_3layer128.txt'
-paramsfile = 'models/wp_tlstm_weights_3layer128.pkl.gz'
-configfile = 'models/wp_tlstm_config_3layer128.pkl.gz'
+outfile = 'results/wp_tlstm_out_4-3layer128.txt'
+paramsfile = 'models/wp_tlstm_weights_4-3layer128.pkl.gz'
+configfile = 'models/wp_tlstm_config_4-3layer128.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -54,7 +54,7 @@ print('Build T-LSTM...')
 model = Sequential()
 # 402888
 
-model.add(LGRU_FF(209, 
+model.add(LGRU_FF(130, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -62,26 +62,36 @@ model.add(LGRU_FF(209,
     input_dim=inputsize
     )
 )
-# model.add(Dropout(0.2))
-model.add(LGRU_FF(105, 
+# model.add(Dropout(0.5))
+model.add(LGRU_FF(130, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
     activation='tanh'
     )
 )
-# # # model.add(Dropout(0.2))
-model.add(LGRU_FF(205, 
+# model.add(Dropout(0.5))
+model.add(LGRU_FF(130, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
     activation='tanh'
     )
 )
+
+model.add(LGRU_FF(129
+    , 
+    return_sequences=True, 
+    init='uniform',
+    inner_activation='sigmoid',
+    activation='tanh'
+    )
+)
+
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-# print 'Parameters: ', model.n_param
+print 'Parameters (recurrent layers only): ', model.n_param
 
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
 model.compile(loss='categorical_crossentropy', optimizer=opt)

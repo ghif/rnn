@@ -24,9 +24,9 @@ import gzip
 # paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'
 
-outfile = 'results/wp_lstm_out_2layer256.txt'
-paramsfile = 'models/wp_lstm_weights_2layer256.pkl.gz'
-configfile = 'models/wp_lstm_config_2layer256.pkl.gz'
+outfile = 'results/wp_lstm_out_3layer256.txt'
+paramsfile = 'models/wp_lstm_weights_3layer256.pkl.gz'
+configfile = 'models/wp_lstm_config_3layer256.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 
@@ -57,21 +57,24 @@ model.add(LSTM(256,
     return_sequences=True,
     input_dim=inputsize)
 )
-model.add(Dropout(0.5))
+# model.add(Dropout(0.5))
+model.add(LSTM(256, 
+    init='uniform',
+    return_sequences=True
+    )
+)
+# model.add(Dropout(0.5))
 model.add(LSTM(256, 
     init='uniform',
     return_sequences=True
     )
 )
 model.add(Dropout(0.5))
-# model.add(LSTM(256, 
-#     init='uniform',
-#     return_sequences=True
-#     )
-# )
 
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
+
+print 'Parameters: ', model.n_param
 
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
 model.compile(loss='categorical_crossentropy', optimizer=opt)

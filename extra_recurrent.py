@@ -150,7 +150,7 @@ class LGRU2(Recurrent):
 	def build(self):
 		input_dim = self.input_shape[2]
 		self.input = T.tensor3()
-		self.n_param = 0
+		# self.n_param = 0
 
 		# forget gate params
 		self.W_xf = self.init((input_dim, self.output_dim))
@@ -263,14 +263,16 @@ class LGRU_FF(Recurrent):
 
 		self.input_dim = input_dim
 		self.input_length = input_length
+		
 		if self.input_dim:
 		    kwargs['input_shape'] = (self.input_length, self.input_dim)
 		super(LGRU_FF, self).__init__(**kwargs)
 
 	def build(self):
+		print('[LGRU_FF] build')
 		input_dim = self.input_shape[2]
 		self.input = T.tensor3()
-		self.n_param = 0
+		
 
 		# forget gate params
 		self.W_xf = self.init((input_dim, self.output_dim))
@@ -391,7 +393,7 @@ class TGRU(Recurrent):
 	def build(self):
 		input_dim = self.input_shape[2]
 		self.input = T.tensor3()
-		self.n_param = 0
+		# self.n_param = 0
 
 		# forget gate params
 		self.W_xf = self.init((input_dim, self.output_dim))
