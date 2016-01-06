@@ -24,9 +24,9 @@ import gzip
 # paramsfile = 'models/wp_lstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_lstm_config'+str(t)+'.pkl.gz'
 
-outfile = 'results/wp_lstm_out_3layer256.txt'
-paramsfile = 'models/wp_lstm_weights_3layer256.pkl.gz'
-configfile = 'models/wp_lstm_config_3layer256.pkl.gz'
+outfile = 'results/wp_lstm_out_2layer128_dropout.txt'
+paramsfile = 'models/wp_lstm_weights_2layer128_dropout.pkl.gz'
+configfile = 'models/wp_lstm_config_2layer128_dropout.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 
@@ -52,27 +52,29 @@ X, Y, X_valid, Y_valid, X_test, Y_test = vectorize(vocabs, seqlen)
 print('Build LSTM...')
 model = Sequential()
 # model.add(Embedding(inputsize, lettersize))
-model.add(LSTM(256, 
+model.add(LSTM(128, 
     init='uniform',
     return_sequences=True,
     input_dim=inputsize)
 )
-# model.add(Dropout(0.5))
-model.add(LSTM(256, 
+model.add(Dropout(0.3))
+
+model.add(LSTM(128, 
     init='uniform',
     return_sequences=True
     )
 )
-# model.add(Dropout(0.5))
-model.add(LSTM(256, 
-    init='uniform',
-    return_sequences=True
-    )
-)
-model.add(Dropout(0.5))
+model.add(Dropout(0.3))
+
+# model.add(LSTM(256, 
+#     init='uniform',
+#     return_sequences=True
+#     )
+# )
 
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
+
 
 print 'Parameters: ', model.n_param
 

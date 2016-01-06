@@ -31,9 +31,9 @@ import gzip
 # paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
 
-outfile = 'results/wp_gru_out_3layer128.txt'
-paramsfile = 'models/wp_gru_weights_3layer128.pkl.gz'
-configfile = 'models/wp_gru_config_3layer128.pkl.gz'
+outfile = 'results/wp_gru_out_3layer256.txt'
+paramsfile = 'models/wp_gru_weights_3layer256.pkl.gz'
+configfile = 'models/wp_gru_config_3layer256.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
@@ -59,7 +59,7 @@ model = Sequential()
 # model.add(Embedding(inputsize, lettersize))
 
 
-model.add(GRU(152, 
+model.add(GRU(297, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -67,25 +67,30 @@ model.add(GRU(152,
     input_dim=inputsize
     )
 )
-# model.add(Dropout(0.4))
-model.add(GRU(147, 
-    return_sequences=True, 
-    init='uniform',
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
+# model.add(Dropout(0.5))
 
-model.add(GRU(148, 
+model.add(GRU(296, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
     activation='tanh'
     )
 )
-# model.add(Dropout(0.4))
+# model.add(Dropout(0.5))
+
+model.add(GRU(295, 
+    return_sequences=True, 
+    init='uniform',
+    inner_activation='sigmoid',
+    activation='tanh'
+    )
+)
+# model.add(Dropout(0.5))
+
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
+
+print 'Parameters: ', model.n_param
 
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
 model.compile(loss='categorical_crossentropy', optimizer=opt)
