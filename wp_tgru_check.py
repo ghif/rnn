@@ -1,6 +1,6 @@
 from keras.models import Sequential
 from keras.layers.core import TimeDistributedDense, Dropout, Activation
-from extra_recurrent import TLSTM
+from extra_recurrent import TGRU_CHECK
 from keras.layers.embeddings import Embedding
 from keras.optimizers import RMSprop
 
@@ -20,9 +20,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tlstm_out_3layer256.txt'
-paramsfile = 'models/wp_tlstm_weights_3layer256.pkl.gz'
-configfile = 'models/wp_tlstm_config_3layer256.pkl.gz'
+outfile = 'results/wp_tgru_check_out_3layer256_dropout2-2.txt'
+paramsfile = 'models/wp_tgru_check_weights_3layer256_dropout2-2.pkl.gz'
+configfile = 'models/wp_tgru_check_config_3layer256_dropout2-2.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -50,42 +50,45 @@ X, Y, X_valid, Y_valid, X_test, Y_test = vectorize(vocabs, seqlen)
 
 # ############
 
-print('Build T-LSTM...')
+print('Build T-GRU...')
 model = Sequential()
 # 402888
 
-
-model.add(TLSTM(339, 
+model.add(TGRU_CHECK(459, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
     activation='tanh',
+    dropout=0.0,
     input_dim=inputsize
     )
 )
-# model.add(Dropout(0.3))
-model.add(TLSTM(312, 
-    return_sequences=True, 
-    init='uniform',
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
-# model.add(Dropout(0.3))
-model.add(TLSTM(310, 
-    return_sequences=True, 
-    init='uniform',
-    inner_activation='sigmoid',
-    activation='tanh'
-    )
-)
+# model.add(Dropout(0.5))
 
+model.add(TGRU_CHECK(458, 
+    return_sequences=True, 
+    init='uniform',
+    inner_activation='sigmoid',
+    dropout=0.1,
+    activation='tanh'
+    )
+)
+# model.add(Dropout(0.5))
+
+model.add(TGRU_CHECK(457, 
+    return_sequences=True, 
+    init='uniform',
+    inner_activation='sigmoid',
+    dropout=0.1,
+    activation='tanh'
+    )
+)
+# model.add(Dropout(0.5))
 
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-print 'Parameters (recurrent layers only): ', model.n_param
-
+print 'Parameters: ', model.n_param
 
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
 model.compile(loss='categorical_crossentropy', optimizer=opt)

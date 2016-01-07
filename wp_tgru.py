@@ -1,6 +1,6 @@
 from keras.models import Sequential
 from keras.layers.core import TimeDistributedDense, Dropout, Activation
-from extra_recurrent import LGRU, LGRU_FF, TGRU
+from extra_recurrent import TGRU
 from keras.layers.embeddings import Embedding
 from keras.optimizers import RMSprop
 
@@ -20,9 +20,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tgru_out_3layer256_dropout.txt'
-paramsfile = 'models/wp_tgru_weights_3layer256_dropout.pkl.gz'
-configfile = 'models/wp_tgru_config_3layer256_dropout.pkl.gz'
+outfile = 'results/wp_tgru_out_3layer256_dropout0.2.txt'
+paramsfile = 'models/wp_tgru_weights_3layer256_dropout0.2.pkl.gz'
+configfile = 'models/wp_tgru_config_3layer256_dropout0.2.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -62,7 +62,7 @@ model.add(TGRU(339,
     input_dim=inputsize
     )
 )
-model.add(Dropout(0.5))
+model.add(Dropout(0.2))
 
 model.add(TGRU(312, 
     return_sequences=True, 
@@ -71,7 +71,7 @@ model.add(TGRU(312,
     activation='tanh'
     )
 )
-model.add(Dropout(0.5))
+model.add(Dropout(0.2))
 
 model.add(TGRU(310, 
     return_sequences=True, 
@@ -80,7 +80,7 @@ model.add(TGRU(310,
     activation='tanh'
     )
 )
-model.add(Dropout(0.5))
+model.add(Dropout(0.2))
 
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
