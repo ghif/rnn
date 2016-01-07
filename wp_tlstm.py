@@ -20,9 +20,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tlstm_out_3layer256.txt'
-paramsfile = 'models/wp_tlstm_weights_3layer256.pkl.gz'
-configfile = 'models/wp_tlstm_config_3layer256.pkl.gz'
+outfile = 'results/wp_tlstm_out_3layer256_dropout0.2.txt'
+paramsfile = 'models/wp_tlstm_weights_3layer256_dropout0.2.pkl.gz'
+configfile = 'models/wp_tlstm_config_3layer256_dropout0.2.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -63,7 +63,7 @@ model.add(TLSTM(339,
     input_dim=inputsize
     )
 )
-# model.add(Dropout(0.3))
+model.add(Dropout(0.2))
 model.add(TLSTM(312, 
     return_sequences=True, 
     init='uniform',
@@ -71,7 +71,7 @@ model.add(TLSTM(312,
     activation='tanh'
     )
 )
-# model.add(Dropout(0.3))
+model.add(Dropout(0.2))
 model.add(TLSTM(310, 
     return_sequences=True, 
     init='uniform',
@@ -79,12 +79,13 @@ model.add(TLSTM(310,
     activation='tanh'
     )
 )
+model.add(Dropout(0.2))
 
 
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))
 
-print 'Parameters (recurrent layers only): ', model.n_param
+print 'Parameters : ', model.n_param
 
 
 opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)

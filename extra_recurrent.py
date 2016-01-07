@@ -374,7 +374,7 @@ class TGRU(Recurrent):
 		init='glorot_uniform', inner_init='orthogonal',
 		activation='sigmoid', inner_activation='hard_sigmoid',
 		weights=None, truncate_gradient=-1, return_sequences=False,
-		input_dim=None, input_length=None, go_backwards=False, p=0.5, **kwargs):
+		input_dim=None, input_length=None, go_backwards=False, dropout=0.5, **kwargs):
 
 		
 
@@ -389,7 +389,7 @@ class TGRU(Recurrent):
 		self.go_backwards = go_backwards
 
 		# for dropout
-		self.p = p #dropout rate
+		self.p = dropout #dropout rate
 		self.srng = RandomStreams(seed=np.random.randint(10e6))
 
 		self.input_dim = input_dim
@@ -437,8 +437,10 @@ class TGRU(Recurrent):
               U_f):
 		h_mask_tm1 = mask_tm1 * h_tm1
 		
-		f_t = self.inner_activation(xf_t)
-		z_t = self.activation(xz_t)
+		# f_t = self.inner_activation(xf_t)
+		f_t = xf_t
+		# z_t = self.activation(xz_t)
+		z_t = xz_t
 		o_t = xo_t
 		# h_t = f_t * h_mask_tm1 + (1 - f_t) * z_t * o_t
 		h_t = f_t * h_mask_tm1 + z_t * o_t
@@ -454,9 +456,20 @@ class TGRU(Recurrent):
 		Z = T.zeros_like(X)
 		X_tm1 = T.concatenate(([Z[0]], X), axis=0)
 		
-		x_f = T.dot(X, self.W_xf) + self.b_f + T.dot(X_tm1[:-1], self.U_hf)
-		x_z = T.dot(X, self.W_xz) + self.b_z + T.dot(X_tm1[:-1], self.U_xz)
+		x_f = self.inner_activation(T.dot(X, self.W_xf) + self.b_f + T.dot(X_tm1[:-1], self.U_hf))
+		x_z = self.activation(T.dot(X, self.W_xz) + self.b_z + T.dot(X_tm1[:-1], self.U_xz))
 		x_o = T.dot(X, self.W_xo) + self.b_o + T.dot(X_tm1[:-1], self.U_xo)
+
+		if self.p > 0:
+			retain_prop = 1. - self.p
+			if train:
+				# x_f *= self.srng.binomial(x_f.shape, p=retain_prop, dtype=theano.config.floatX)
+				x_z *= self.srng.binomial(x_z.shape, p=retain_prop, dtype=theano.config.floatX)
+				x_o *= self.srng.binomial(x_o.shape, p=retain_prop, dtype=theano.config.floatX)
+			else:
+				x_z *= retain_prop
+				x_o *= retain_prop
+				# x_f *= retain_prop
 
 		h_info = T.unbroadcast(alloc_zeros_matrix(X.shape[1], self.output_dim), 1)
 
