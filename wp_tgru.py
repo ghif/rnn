@@ -20,9 +20,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tgru_out_3layer256_wdropout0.2.txt'
-paramsfile = 'models/wp_tgru_weights_3layer256_wdropout0.2.pkl.gz'
-configfile = 'models/wp_tgru_config_3layer256_wdropout0.2.pkl.gz'
+outfile = 'results/wp_tgru_out_2layer256_dropout0.2.txt'
+paramsfile = 'models/wp_tgru_weights_2layer256_dropout0.2.pkl.gz'
+configfile = 'models/wp_tgru_config_2layer256_dropout0.2.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -59,30 +59,30 @@ model.add(TGRU(339,
     init='uniform',
     inner_activation='sigmoid',
     activation='tanh',
-    dropout=0.2,
+    # dropout=0.2,
     input_dim=inputsize
     )
 )
-# model.add(Dropout(0.2))
+model.add(Dropout(0.2))
 
 model.add(TGRU(312, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
-    activation='tanh',
-    dropout=0.2
+    activation='tanh'
+    # dropout=0.2
     )
 )
-# model.add(Dropout(0.2))
+model.add(Dropout(0.2))
 
-model.add(TGRU(310, 
-    return_sequences=True, 
-    init='uniform',
-    inner_activation='sigmoid',
-    activation='tanh',
-    dropout=0.2
-    )
-)
+# model.add(TGRU(310, 
+#     return_sequences=True, 
+#     init='uniform',
+#     inner_activation='sigmoid',
+#     activation='tanh'
+#     # dropout=0.2
+#     )
+# )
 # model.add(Dropout(0.2))
 
 model.add(TimeDistributedDense(outputsize))

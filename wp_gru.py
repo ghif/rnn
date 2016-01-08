@@ -31,9 +31,9 @@ import gzip
 # paramsfile = 'models/wp_gru_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_gru_config'+str(t)+'.pkl.gz'
 
-outfile = 'results/wp_gru_out_3layer256_dropout.txt'
-paramsfile = 'models/wp_gru_weights_3layer256_dropout.pkl.gz'
-configfile = 'models/wp_gru_config_3layer256_dropout.pkl.gz'
+outfile = 'results/wp_gru_out_3layer256_dropout0.2.txt'
+paramsfile = 'models/wp_gru_weights_3layer256_dropout0.2.pkl.gz'
+configfile = 'models/wp_gru_config_3layer256_dropout0.2.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # hyper-parameters
@@ -67,7 +67,7 @@ model.add(GRU(297,
     input_dim=inputsize
     )
 )
-model.add(Dropout(0.5))
+model.add(Dropout(0.2))
 
 model.add(GRU(296, 
     return_sequences=True, 
@@ -76,7 +76,7 @@ model.add(GRU(296,
     activation='tanh'
     )
 )
-model.add(Dropout(0.5))
+model.add(Dropout(0.2))
 
 model.add(GRU(295, 
     return_sequences=True, 
@@ -85,7 +85,7 @@ model.add(GRU(295,
     activation='tanh'
     )
 )
-model.add(Dropout(0.5))
+model.add(Dropout(0.2))
 
 model.add(TimeDistributedDense(outputsize))
 model.add(Activation('softmax'))

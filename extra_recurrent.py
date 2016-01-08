@@ -374,7 +374,7 @@ class TGRU(Recurrent):
 		init='glorot_uniform', inner_init='orthogonal',
 		activation='sigmoid', inner_activation='hard_sigmoid',
 		weights=None, truncate_gradient=-1, return_sequences=False,
-		input_dim=None, input_length=None, go_backwards=False, dropout=0.5, **kwargs):
+		input_dim=None, input_length=None, go_backwards=False, dropout=0.0, **kwargs):
 
 		
 
