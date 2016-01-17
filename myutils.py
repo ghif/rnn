@@ -170,6 +170,23 @@ def vectorize(vocabs, seqlen):
     X_test, Y_test = to_onehot(sents_test, seqlen, inputsize)
     return X_train, Y_train, X_valid, Y_valid, X_test, Y_test
 
+def vectorize_ptb(wordint_list, seqlen, inputsize):
+    print('vectorize ptb')
+    n = len(wordint_list)
+    m = n / seqlen
+    X = np.zeros((m, seqlen), dtype='int32')
+    Y = np.zeros((m, seqlen), dtype='int32')
+    # print(n-1)
+    # print(seqlen)
+    for i in xrange(0, n, seqlen):
+        # print(i)
+        # word = wordint_list[i]
+        for t in xrange(i, seqlen):
+            X[i, t] = wordint_list[t]
+            Y[i, t] = wordint_list[t+1]
+        #     word = next_word
+    return X, Y
+
 def text_sampling_char(
     model,vocabs,templist,
     char='',ns=200):

@@ -20,9 +20,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tlstm_out_2layer256_dropout0.2.txt'
-paramsfile = 'models/wp_tlstm_weights_2layer256_dropout0.2.pkl.gz'
-configfile = 'models/wp_tlstm_config_2layer256_dropout0.2.pkl.gz'
+outfile = 'results/wp_tlstm_out_3layer512_dropout0.2.txt'
+paramsfile = 'models/wp_tlstm_weights_3layer512_dropout0.2.pkl.gz'
+configfile = 'models/wp_tlstm_config_3layer512_dropout0.2.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -55,7 +55,7 @@ model = Sequential()
 # 402888
 
 
-model.add(TLSTM(339, 
+model.add(TLSTM(650, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -64,7 +64,7 @@ model.add(TLSTM(339,
     )
 )
 model.add(Dropout(0.2))
-model.add(TLSTM(312, 
+model.add(TLSTM(650, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -72,14 +72,14 @@ model.add(TLSTM(312,
     )
 )
 model.add(Dropout(0.2))
-# model.add(TLSTM(310, 
-#     return_sequences=True, 
-#     init='uniform',
-#     inner_activation='sigmoid',
-#     activation='tanh'
-#     )
-# )
-# model.add(Dropout(0.2))
+model.add(TLSTM(649, 
+    return_sequences=True, 
+    init='uniform',
+    inner_activation='sigmoid',
+    activation='tanh'
+    )
+)
+model.add(Dropout(0.2))
 
 
 model.add(TimeDistributedDense(outputsize))

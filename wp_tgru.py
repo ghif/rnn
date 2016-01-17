@@ -20,9 +20,9 @@ import gzip
 # outfile = 'results/wp_tlstm_out'+str(t)+'.txt'
 # paramsfile = 'models/wp_tlstm_weights'+str(t)+'.pkl.gz'
 # configfile = 'models/wp_tlstm_config'+str(t)+'.pkl.gz'
-outfile = 'results/wp_tgru_out_2layer256_dropout0.2.txt'
-paramsfile = 'models/wp_tgru_weights_2layer256_dropout0.2.pkl.gz'
-configfile = 'models/wp_tgru_config_2layer256_dropout0.2.pkl.gz'
+outfile = 'results/wp_tgru_out_1layer512_dropout0.2.txt'
+paramsfile = 'models/wp_tgru_weights_1layer512_dropout0.2.pkl.gz'
+configfile = 'models/wp_tgru_config_1layer512_dropout0.2.pkl.gz'
 print outfile,' ---- ', paramsfile
 
 # t = 3
@@ -54,7 +54,7 @@ print('Build T-GRU...')
 model = Sequential()
 # 402888
 
-model.add(TGRU(339, 
+model.add(TGRU(650, 
     return_sequences=True, 
     init='uniform',
     inner_activation='sigmoid',
@@ -65,17 +65,17 @@ model.add(TGRU(339,
 )
 model.add(Dropout(0.2))
 
-model.add(TGRU(312, 
-    return_sequences=True, 
-    init='uniform',
-    inner_activation='sigmoid',
-    activation='tanh'
-    # dropout=0.2
-    )
-)
-model.add(Dropout(0.2))
+# model.add(TGRU(650, 
+#     return_sequences=True, 
+#     init='uniform',
+#     inner_activation='sigmoid',
+#     activation='tanh'
+#     # dropout=0.2
+#     )
+# )
+# model.add(Dropout(0.2))
 
-# model.add(TGRU(310, 
+# model.add(TGRU(649,
 #     return_sequences=True, 
 #     init='uniform',
 #     inner_activation='sigmoid',
