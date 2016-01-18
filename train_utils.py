@@ -35,8 +35,6 @@ def evaluate(model, X, Y, batch_size=1024, vocab_size=35):
         #log-loss
         loss_list.append(test_score)
 
-        
-
         # perplexity
         probs = model.predict(X_batch)
         ppl = perplexity(Y_batch_onehot, probs)
@@ -62,16 +60,12 @@ def train_rnn_ptb(model, X, Y, X_valid, Y_valid, X_test, Y_test,
     losses = []
     ppl_avgs = []
     word_ppl_avgs = []
-
     ppl_meds = []
-
-
 
     losses_valid = []
     ppl_valid_avgs = []
     word_ppl_valid_avgs = []
     ppl_valid_meds = []
-
 
     losses_test = []
     ppl_test_avgs = []
@@ -110,28 +104,36 @@ def train_rnn_ptb(model, X, Y, X_valid, Y_valid, X_test, Y_test,
         
         start_time = time.time()
 
-        loss_avg = 0.
         loss_list = []
-
-        ppl = 0. #perplexity
-        ppls = []
-        word_ppls = []
-
-        
+        ppl_list = []
+        word_ppl_list = []
         progbar = generic_utils.Progbar(X.shape[0])
         for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
             Y_batch_onehot = to_onehot(Y_batch, vocab_size)
             train_score = model.train_on_batch(X_batch, Y_batch_onehot)
             progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
 
+            #log-loss
+            loss_list.append(train_score)
+
+            # perplexity
+            probs = model.predict(X_batch)
+            ppl = perplexity(Y_batch_onehot, probs)
+            ppl_list.append(ppl)
+
+
+            #word-level perplexity
+            word_ppl = word_perplexity(train_score)
+            word_ppl_list.append(word_ppl)
 
 
         elapsed_time = time.time() - start_time
         elapsed_times.append(elapsed_time)
 
-        
-        
-        (loss, ppl, word_ppl) = evaluate(model, X, Y, batch_size=1024, vocab_size=10000)
+        loss = np.average(loss_list)
+        ppl = np.average(ppl_list)
+        word_ppl = np.average(word_ppl_list)
+        # (loss, ppl, word_ppl) = evaluate(model, X, Y, batch_size=1024, vocab_size=10000)
         print '\n'
         print '-- (Averaged) train loss : ',loss
         outstr += '-- (Averaged) train loss : %s\n' % loss
@@ -147,7 +149,7 @@ def train_rnn_ptb(model, X, Y, X_valid, Y_valid, X_test, Y_test,
 
 
         print(' == VALIDATION ==')
-        (loss, ppl, word_ppl) = evaluate(model, X_valid, Y_valid, batch_size=1024, vocab_size=10000)
+        (loss, ppl, word_ppl) = evaluate(model, X_valid, Y_valid, batch_size=512, vocab_size=10000)
         print '\n'
         print '-- (Averaged) Valid loss : ',loss
         outstr += '-- (Averaged) Valid loss : %s\n' % loss
@@ -164,7 +166,7 @@ def train_rnn_ptb(model, X, Y, X_valid, Y_valid, X_test, Y_test,
 
 
         print(' == TEST ==')
-        (loss, ppl, word_ppl) = evaluate(model, X_test, Y_test, batch_size=1024, vocab_size=10000)
+        (loss, ppl, word_ppl) = evaluate(model, X_test, Y_test, batch_size=512, vocab_size=10000)
         print '\n'
         print '-- (Averaged) Test loss : ',loss
         outstr += '-- (Averaged) Test loss : %s\n' % loss
