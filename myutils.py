@@ -8,20 +8,6 @@ from sklearn import preprocessing
 from keras.utils import np_utils, generic_utils
 
 
-
-def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
-    assert len(inputs) == len(targets)
-    if shuffle:
-        indices = np.arange(len(inputs))
-        np.random.shuffle(indices)
-    for start_idx in range(0, len(inputs) - batchsize + 1, batchsize):
-        if shuffle:
-            excerpt = indices[start_idx:start_idx + batchsize]
-        else:
-            excerpt = slice(start_idx, start_idx + batchsize)
-        yield inputs[excerpt], targets[excerpt]
-
-
 def create_train_val(X, Y, p=0.7):
     [n, t, d] = X.shape
     n_train = int(p*n)
@@ -140,6 +126,25 @@ def initvocab_split(datapath, seqlen, valid_frac=0.1, test_frac=0.1):
     
     return vocabs
 
+def to_onehot(X, vocab_size):
+    # X: [n, seqlen]
+    # Y
+    [n, seqlen] = X.shape
+    Y = np.zeros((n, seqlen, vocab_size), dtype='float32')
+
+    Lout = X.tolist()
+    for i in xrange(n):
+        Lin = Lout[i]
+        
+
+        for t, el in enumerate(Lin):
+            Y[i, t, el] = 1
+
+    return Y
+
+
+
+
 def vectorize(vocabs, seqlen):
     sents = vocabs['sents']
     sents_valid = vocabs['sents_valid']
@@ -178,12 +183,12 @@ def vectorize_ptb(wordint_list, seqlen, inputsize):
     Y = np.zeros((m, seqlen), dtype='int32')
     # print(n-1)
     # print(seqlen)
-    for i in xrange(0, n, seqlen):
+    for i in xrange(m):
         # print(i)
         # word = wordint_list[i]
-        for t in xrange(i, seqlen):
-            X[i, t] = wordint_list[t]
-            Y[i, t] = wordint_list[t+1]
+        for t in xrange(seqlen):
+            X[i, t] = wordint_list[i*seqlen + t]
+            Y[i, t] = wordint_list[(i*seqlen + t)+1]
         #     word = next_word
     return X, Y
 
@@ -274,8 +279,6 @@ def text_sampling_char(
     outstr += '\n\n'
 
 
-
-
     return outstr
 
 def perplexity(Y, P):
@@ -290,280 +293,7 @@ def perplexity(Y, P):
     ppl = (-np.sum(np.multiply(Y, logp)) /  (seqlen * batch_size)) ** 2
     return ppl
 
+def word_perplexity(loss):
+    return np.exp(loss)
 
-def train_rnn(model, vocabs,
-    X, Y, batch_size=20, iteration=500, 
-    outfile='outfile.txt', paramsfile='paramsfile.pkl.gz'):
 
-    fo = open(outfile,'w')
-    fo.close()
-
-    losses = []
-    ppl_avgs = []
-    ppl_meds = []
-    elapsed_times = []
-    
-
-    for itr in range(1, iteration+1):
-        print()
-        outstr = ''
-        print('*' * 50)
-        outstr += '*******\n'
-        
-        print('Iteration', itr)
-        outstr += 'Iteration : %d\n' % (itr)
-
-        
-        print('*' * 50)
-        outstr += '*******\n'
-
-        if itr % 10 == 0:
-            print(' -- Text sampling ---')
-            temperatures = [0.7, 1]
-            generated = text_sampling_char(
-                model,vocabs,
-                temperatures, 
-                ns=400)
-            
-            outstr += generated
-
-
-        print(' -- Training --')
-        
-        start_time = time.time()
-
-        loss_avg = 0.
-
-        ppl = 0. #perplexity
-        ppls = []
-
-        n_batches = 0
-        
-
-        progbar = generic_utils.Progbar(X.shape[0])
-        for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
-            train_score = model.train_on_batch(X_batch, Y_batch)
-            progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
-
-
-            # log loss
-            loss_avg += train_score
-            n_batches += 1
-
-            # perplexity
-            probs = model.predict(X_batch)
-            ppl = perplexity(Y_batch, probs)
-            ppls.append(ppl)
-
-
-        elapsed_time = time.time() - start_time
-        elapsed_times.append(elapsed_time)
-
-
-        loss_avg = loss_avg / n_batches
-
-
-        ppl_avg = np.average(ppls)
-        print ''
-        print '-- (Averaged) Perplexity : ',ppl_avg
-        outstr += '-- (Averaged) Perplexity : %s\n' % ppl_avg
-        ppl_avgs.append(ppl_avg)
-
-        ppl_med = np.median(ppls)
-        print '-- (Median) Perplexity : ',ppl_med
-        outstr += '-- (Median) Perplexity : %s\n' % ppl_med
-        ppl_meds.append(ppl_med)
-
-        print '-- (Averaged) train loss : ',loss_avg
-        outstr += '-- (Averaged) train loss : %s\n' % loss_avg
-        losses.append(loss_avg)
-
-        # store the training progress incl. the generated text
-        fo = open(outfile,'a')
-        fo.write(outstr)    
-        fo.close()
-
-
-        # store the other numerical results
-        res = {'losses':losses, 
-                'ppl_avgs':ppl_avgs,
-                'ppl_meds':ppl_meds,
-                'elapsed_times':elapsed_times,
-                'weights': model.get_weights()
-        }
-        
-        pickle.dump(res, gzip.open(paramsfile,'w'))
-
-    return res
-
-def train_rnn2(model, vocabs,
-    X, Y, X_valid, Y_valid, X_test, Y_test,
-    batch_size=100, iteration=50, 
-    outfile='outfile.txt', paramsfile='paramsfile.pkl.gz'):
-
-    fo = open(outfile,'w')
-    fo.close()
-
-    losses = []
-    ppl_avgs = []
-    ppl_meds = []
-
-    losses_valid = []
-    ppl_valid_avgs = []
-    ppl_valid_meds = []
-
-    losses_test = []
-    ppl_test_avgs = []
-    ppl_test_meds = []
-
-
-    elapsed_times = []
-    
-
-    for itr in range(1, iteration+1):
-        print()
-        outstr = ''
-        print('*' * 50)
-        outstr += '*******\n'
-        
-        print('Iteration', itr)
-        outstr += 'Iteration : %d\n' % (itr)
-
-        
-        print('*' * 50)
-        outstr += '*******\n'
-
-        if itr % 10 == 0:
-            print(' -- Text sampling ---')
-            temperatures = [0.7, 1]
-            generated = text_sampling_char(
-                model,vocabs,
-                temperatures, 
-                ns=400)
-            
-            outstr += generated
-
-
-        print(' == Training ==')
-        
-        start_time = time.time()
-
-        loss_avg = 0.
-        loss_list = []
-
-        ppl = 0. #perplexity
-        ppls = []
-
-        n_batches = 0
-        
-
-        progbar = generic_utils.Progbar(X.shape[0])
-        for X_batch, Y_batch in iterate_minibatches(X, Y, batch_size, shuffle=False):
-            train_score = model.train_on_batch(X_batch, Y_batch)
-            progbar.add(X_batch.shape[0], values=[("train loss", train_score)])
-
-
-            # log loss
-            # loss_avg += train_score
-            loss_list.append(train_score)
-
-            n_batches += 1
-
-            # perplexity
-            probs = model.predict(X_batch)
-            ppl = perplexity(Y_batch, probs)
-            ppls.append(ppl)
-
-
-        elapsed_time = time.time() - start_time
-        elapsed_times.append(elapsed_time)
-
-
-        # loss_avg = loss_avg / n_batches
-        print ''
-        loss_avg = np.average(loss_list)
-        print '-- (Averaged) train loss : ',loss_avg
-        outstr += '-- (Averaged) train loss : %s\n' % loss_avg
-        losses.append(loss_avg)
-
-        ppl_avg = np.average(ppls)        
-        print '-- (Averaged) Perplexity : ',ppl_avg
-        outstr += '-- (Averaged) Perplexity : %s\n' % ppl_avg
-        ppl_avgs.append(ppl_avg)
-
-        ppl_med = np.median(ppls)
-        print '-- (Median) Perplexity : ',ppl_med
-        outstr += '-- (Median) Perplexity : %s\n' % ppl_med
-        ppl_meds.append(ppl_med)
-
-        
-
-
-        print(' == VALIDATION ==')
-
-        loss_valid_avg = model.evaluate(X_valid, Y_valid, batch_size=1024)
-        print '-- (Averaged) Valid loss : ',loss_valid_avg
-        outstr += '-- (Averaged) Valid loss : %s\n' % loss_valid_avg
-        losses_valid.append(loss_valid_avg)
-        
-        probs_valid = model.predict(X_valid)
-        ppls_valid = perplexity(Y_valid, probs_valid)
-        ppl_avg = np.average(ppls_valid)
-        
-        print '-- (Averaged) Validation Perplexity : ',ppl_avg
-        outstr += '-- (Averaged) Validation Perplexity : %s\n' % ppl_avg
-        ppl_valid_avgs.append(ppl_avg)
-        
-
-        ppl_med = np.median(ppls_valid)
-        print '-- (Median) Validation Perplexity : ',ppl_med
-        outstr += '-- (Median) Validation Perplexity : %s\n' % ppl_med
-        ppl_valid_meds.append(ppl_med)
-
-
-
-        print(' == TEST ==')
-        loss_test_avg = model.evaluate(X_test, Y_test, batch_size=1024)
-        print '-- (Averaged) Test loss : ',loss_test_avg
-        outstr += '-- (Averaged) Test loss : %s\n' % loss_test_avg
-        losses_test.append(loss_test_avg)
-
-
-
-        probs_test = model.predict(X_test)
-        ppls_test = perplexity(Y_test, probs_test)
-
-        ppl_avg = np.average(ppls_test)
-        print '-- (Averaged) Test Perplexity : ',ppl_avg
-        outstr += '-- (Averaged) Test Perplexity : %s\n' % ppl_avg
-        ppl_test_avgs.append(ppl_avg)
-
-        ppl_med = np.median(ppls_test)
-        print '-- (Median) Test Perplexity : ',ppl_med
-        outstr += '-- (Median) Test Perplexity : %s\n' % ppl_med
-        ppl_test_meds.append(ppl_med)
-        
-
-        # store the training progress incl. the generated text
-        fo = open(outfile,'a')
-        fo.write(outstr)    
-        fo.close()
-
-
-        # store the other numerical results
-        res = {'losses':losses,
-                'ppl_avgs':ppl_avgs,
-                'ppl_meds':ppl_meds,
-                'losses_valid':losses_valid,
-                'ppl_valid_avgs':ppl_valid_avgs,
-                'ppl_valid_meds':ppl_valid_meds,
-                'losses_test':losses_test,
-                'ppl_test_avgs':ppl_test_avgs,
-                'ppl_test_meds':ppl_test_meds,
-                'elapsed_times':elapsed_times,
-                'weights': model.get_weights()
-        }
-        
-        pickle.dump(res, gzip.open(paramsfile,'w'))
-
-    return res

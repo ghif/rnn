@@ -1,6 +1,7 @@
 import cPickle as pickle
 import gzip
 from myutils import *
+from train_utils import *
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
 from keras.layers.recurrent import SimpleRNN, LSTM
@@ -21,7 +22,9 @@ batch_size = 20
 embed_size = 200 #
 hidden_size = 200 #small
 max_epoch = 13
+clipval = 5
 embed_size = hidden_size
+
 
 # load dataset
 ptb = pickle.load(gzip.open('data/ptb_dataset.pkl.gz'))
@@ -32,7 +35,14 @@ test_data = ptb['test_data'] # list of integer
 vocab_size = len(word_to_id) # integer
 
 
-X_train, Y_train = vectorize_ptb(train_data, seqlen, vocab_size)
+X, Y = vectorize_ptb(train_data, seqlen, vocab_size)
+X_valid, Y_valid = vectorize_ptb(valid_data, seqlen, vocab_size)
+X_test, Y_test = vectorize_ptb(valid_data, seqlen, vocab_size)
+
+
+
+# Yb = Y_train[0:20]
+# Yh = to_onehot(Yb, vocab_size)
 
 print('Build LSTM')
 model = Sequential()
@@ -40,16 +50,37 @@ model = Sequential()
 model.add(Embedding(vocab_size, embed_size))
 model.add(LSTM(hidden_size,
 	init='uniform',
-	return_sequence=True,
+	return_sequences=True,
 	input_dim=embed_size)
 )
 model.add(LSTM(hidden_size,
 	init='uniform',
-	return_sequence=True)
+	return_sequences=True)
 )
 model.add(TimeDistributedDense(vocab_size))
+model.add(Activation('softmax'))
+
+print 'Parameters: ', model.n_param
+
+opt = RMSprop(lr=learning_rate, rho=0.9, epsilon=1e-6, clipvalue=clipval)
+model.compile(loss='categorical_crossentropy', optimizer=opt)
 
 
+# Store configuration
+res = {'config': model.get_config(),
+    'seqlen':seqlen,
+    'learning_rate':learning_rate,
+    'batch_size':batch_size,
+    'vocab_size':vocab_size,
+    'clipval':clipval
+}
+pickle.dump(res, gzip.open(configfile,'w'))
+
+train_rnn_ptb(model, X, Y, 
+    X_valid, Y_valid, X_test, Y_test,
+    batch_size=batch_size, iteration=max_epoch,vocab_size=vocab_size,
+    outfile=outfile, paramsfile=paramsfile
+) #see myutils.py
 
 
 
